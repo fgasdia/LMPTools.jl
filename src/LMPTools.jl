@@ -9,7 +9,6 @@ using Rotations, StaticArrays
 using HDF5
 using GeographicLib
 using LongwaveModePropagator
-import LongwaveModePropagator: BField
 
 project_path(parts...) = normpath(@__DIR__, "..", parts...)
 
@@ -26,6 +25,7 @@ const TRANSMITTER = Dict(
 
 export TRANSMITTER
 export get_ground, get_groundcode, get_epsilon, get_sigma, groundsegments
+export igrf
 
 ###
 # Ground
@@ -113,5 +113,24 @@ end
 
 ###
 # Magnetic field
+
+"""
+    igrf(geoaz, lat, lon, year; alt=60e3)
+
+Return a `BField` from IGRF-13 for position `lat`, `lon` in degrees at fractional
+`year`. `geoaz` is the geodetic azimuth of the path from transmitter to receiver.
+By default, the magnetic field at an altitude of 60,000 meters is returned,
+but this can be overridden with the `alt` keyword argument.
+"""
+function igrf(geoaz, lat, lon, year; alt=60e3)
+    n, e, v, t = igrf13syn(0, year, 1, alt/1000, 90-lat, mod(lon, 360))  # in nT!, @60km altitude
+
+    # Rotate the nev frame to the propagation path xyz frame
+    # negate az to correct rotation direction for downward pointing v
+    R = RotXZ(π, -deg2rad(geoaz))
+    Rd = R*SVector(n,e,v)
+
+    return BField(t*1e-9, Rd[1]/t, Rd[2]/t, Rd[3]/t)
+end
 
 end

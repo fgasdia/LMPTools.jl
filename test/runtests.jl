@@ -8,7 +8,7 @@ const LON = GROUND_DATA["lon"]
 
 
 @testset "LMPTools" begin
-
+    # Ground
     @test extrema(GROUND_DATA["lat"]) == (-90, 90)
     @test extrema(GROUND_DATA["lon"]) == (-180, 180)
 
@@ -45,6 +45,17 @@ const LON = GROUND_DATA["lon"]
                                         require_permittivity_change=true)
     @test length(grounds) == length(unique(grounds))
     @test length(grounds) == length(distances)
+
+    # Magnetic field
+
+    az, _, dist, _ = inverse(tx.longitude, tx.latitude, rx.longitude, rx.latitude)
+
+    # Based on https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml#igrfwmm
+    declination = -16.0378
+    calcb = BField(50.6701e-6, deg2rad(67.7737), deg2rad(az-declination))
+
+    bfield = igrf(az, tx.latitude, tx.longitude, 2020)
+    all(isapprox(getfield(bfield,f), getfield(calcb,f); rtol=1e-4) for f in fieldnames(BField))
 end
 
 ###
