@@ -6,7 +6,7 @@ Convenience and utility functions for LongwaveModePropagator.jl.
 module LMPTools
 
 using Rotations, StaticArrays
-using HDF5
+using HDF5, Dates
 using GeographicLib
 using LongwaveModePropagator
 
@@ -25,7 +25,7 @@ const TRANSMITTER = Dict(
 
 export TRANSMITTER
 export get_ground, get_groundcode, get_epsilon, get_sigma, groundsegments
-export igrf
+export igrf, zenithangle
 
 
 ###
@@ -159,14 +159,119 @@ function igrf(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
     return bfields
 end
 
-"""
-    igrf(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
 
-Return a `Vector{BField}` at each distance in `dists` in meters along the path from `tx` to
-`rx` in `year`.
+###
+# Sun position
+
 """
-function igrf(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
-    return igrf(tx.latitude, tx.longitude, rx.latitude, rx.longitude, year, dists; alt=alt)
+    zenithangle(lat, lon, y, m, d, h, Δτ=nothing)
+
+Return the solar zenith angle in degrees for year `y`, month `m`, day `d`, and hour `h` in
+universal time (UT1). `Δτ` is the difference between terrestrial time and universal time.
+The position in `lat`, `lon` is in degrees.
+
+If `Δτ` is `nothing`, it will be computed by a linear extrapolation. Although this is not
+accurate because `Δτ` is irregular, an error up to 30 seconds does not significantly affect
+the result.
+
+This function uses the calculation-optimized formulation of Algorithm 5 from
+
+    Grena, R., “Five new algorithms for the computation of sun position from 2010 to 2110,”
+    Solar Energy, 86, 2012, pp. 1323-1337. doi: 10.1016/j.solener.2012.01.024
+
+which has a maximum error of 0.0027° (~10 arcsec) between year 2010 and 2110.
+
+Refraction is not considered in this implementation.
+"""
+function zenithangle(lat, lon, yr::Int, mo::Int, dy::Int, hr::Real, Δτ=nothing)
+    θ, ϕ = deg2rad(lon), deg2rad(lat)
+
+    # Time scale computation
+    if mo <= 2
+        mo += 12
+        yr -= 1
+    end
+
+    t = trunc(Int, 365.25*(yr - 2000)) + trunc(Int, 30.6001*(mo + 1)) -
+        trunc(Int, 0.01*yr) + dy + 0.0416667*hr - 21958
+
+    if isnothing(Δτ)
+        Δτ = 96.4 + 0.00158*t
+    end
+
+    te = t + 1.1574e-5*Δτ
+
+    # Heliocentric ecliptic longitude L
+    ωa = 0.0172019715
+    a = SVector(3.33024e-2, 3.512e-4, 5.2e-6)
+    b = SVector(-2.0582e-3, -4.07e-5, -9e-7)
+    s1, c1 = sincos(ωa*te)
+    s2, c2 = 2*s1*c1, (c1 + s1)*(c1 - s1)
+    s3, c3 = s2*c1 + c2*s1, c2*c1 - s2*s1
+    s, c = SVector(s1, s2, s2), SVector(c1, c2, c3)
+
+    β = 2.92e-5
+    dβ = -8.23e-5
+    ω = SVector(1.49e-3, 4.31e-3, 1.076e-2, 1.575e-2, 2.152e-2, 3.152e-2, 2.1277e-1)
+    d = SVector(1.27e-5, 1.21e-5, 2.33e-5, 3.49e-5, 2.67e-5, 1.28e-5, 3.14e-5)
+    φ = SVector(-2.337, 3.065, -1.533, -2.358, 0.074, 1.547, -0.488)
+
+    L = 1.7527901 + 1.7202792159e-2*te
+    for k = 1:3
+        L += a[k]*s[k] + b[k]*c[k]
+    end
+    L += dβ*s1*sin(β*te)
+    for i = 1:7
+        L += d[i]*sin(ω[i]*te + φ[i])
+    end
+
+    # Nutation correction
+    ωn = 9.282e-4
+    ν = ωn*te - 0.8
+    sν, cν = sincos(ν)
+    Δλ = 8.34e-5*sν
+    λ = L + π + Δλ
+    ϵ = 4.089567e-1 - 6.19e-9*te + 4.46e-5*cν
+    sλ, cλ = sincos(λ)
+    sϵ, cϵ = sincos(ϵ)
+
+    α = atan(sλ*cϵ, cλ)
+    α < 0 && (α += 2π)  # [-π/2, π/2] → [0, 2π]
+
+    δ = asin(sλ*sϵ)
+    H = 1.7528311 + 6.300388099*t + θ - α + 0.92*Δλ
+    H = mod2pi(H + π) - π  # hour angle
+
+    # Calculate zenith and azimuth angle with parallax correction for topocentric coords
+    sϕ, cϕ = sincos(ϕ)
+    sδ, cδ = sincos(δ)
+    cH = cos(H)
+    # sH, cH = sincos(H)
+
+    se0 = sϕ*sδ + cϕ*cδ*cH
+    ep = asin(se0) - 4.26e-5*sqrt(1 - se0^2)
+
+    # Γ = atan(sH, cH*sϕ - sδ*cϕ/cδ)  # azimuth
+
+    # Refraction correction to elevation
+    # Δre = 0.08422*P/(273 + T)/tan(ep + 0.003138/(ep + 0.08919))
+
+    z = π/2 - ep  # - Δre  # zenith angle
+
+    return rad2deg(z)
+end
+
+"""
+    zenithangle(lat, lon, dt::DateTime, Δτ=nothing)
+
+Return the solar zenith angle in radians for universal `dt` with `Δτ` difference in seconds
+between terrestrial time and universal time. The position `lat`, `lon` should be in degrees.
+"""
+function zenithangle(lat, lon, dt::DateTime, Δτ=nothing)
+    y, m, d = yearmonthday(dt)
+    h = hour(dt) + minute(dt)/60 + second(dt)/3600 + millisecond(dt)/3600_000
+
+    return zenithangle(lat, lon, y, m, d, h, Δτ)
 end
 
 end

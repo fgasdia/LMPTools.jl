@@ -1,5 +1,5 @@
 using Test, LMPTools
-using CSV
+using CSV, Dates
 using GeographicLib
 using LongwaveModePropagator
 const LMP = LongwaveModePropagator
@@ -68,6 +68,23 @@ const LON = GROUND_DATA["lon"]
 
     bfield = igrf(az, tx.latitude, tx.longitude, 2020)
     all(isapprox(getfield(bfield,f), getfield(calcb,f); rtol=1e-4) for f in fieldnames(BField))
+
+    # Zenith angle
+
+    dt = DateTime(2021, 2, 1, 12, 45)
+    lon, lat = forward(gl1, 1000e3)
+    @test zenithangle(lat, lon, dt) == zenithangle(lat, lon, 2021, 2, 1, 12.75)
+
+    # Check out https://ssd.jpl.nasa.gov/horizons.cgi for comparison numbers
+    @test zenithangle(lat, lon, dt) ≈ 90 - 0.3106 atol=0.01
+    @test zenithangle(lat, lon, 2021, 2, 1, 16) ≈ 90 - 24.9418 atol=0.01
+    @test zenithangle(lat, lon, 2021, 2, 1, 21.25) ≈ 90 - 10.5537 atol=0.01
+
+    lon, lat = -110, 62
+    @test zenithangle(lat, lon, 2021, 2, 1, 9.5) ≈ 90 - -40.5603 atol=0.01
+    @test zenithangle(lat, lon, 2021, 2, 1, 20) ≈ 90 - 10.9651 atol=0.01
+    @test zenithangle(lat, lon, 2021, 9, 15, 5) ≈ 90 - -20.1376 atol=0.01
+    @test zenithangle(lat, lon, 2021, 9, 15, 19.25) ≈ 90 - 30.7122 atol=0.01
 end
 
 ###
@@ -109,5 +126,14 @@ ld, la, lp = readlog(LMPTools.project_path("data", "bfield.log"))
 plot(sampler.distance/1000, a, label="LMP",
      ylabel="Amplitude (dB)", xlabel="Range (km)", linewidth=1.5)
 plot!(ld, la, label="LWPC", linewidth=1.5)
+
+# Zenith angle
+
+dt = DateTime(2021, 2, 1)
+lats = -89:1:89
+lons = -179:179
+szas = [zenithangle(la, lo, dt) for la in lats, lo in lons]
+heatmap(lons, lats, szas,
+        color=cgrad(:starrynight, [50, 70, 80, 85, 90, 95, 100, 110, 130]/180, rev=true), clims=(0, 180))
 
 ==#
