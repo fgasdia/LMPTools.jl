@@ -27,6 +27,15 @@ export TRANSMITTER
 export get_ground, get_groundcode, get_epsilon, get_sigma, groundsegments
 export igrf
 
+
+###
+# Extend library functions
+
+function GeographicLib.GeodesicLine(tx::Transmitter, rx::Receiver)
+    return GeodesicLine(tx.longitude, tx.latitude; lon2=rx.longitude, lat2=rx.latitude)
+end
+
+
 ###
 # Ground
 
@@ -66,10 +75,10 @@ get_epsilon(lat, lon) = get_ground("epsilonmap", lat, lon)
 
 
 """
-    groundsegments(lat1, lon1, lat2, lon2; resolution=20e3, require_permittivity_change=false)
+    groundsegments(tx::Transmitter, rx::Receiver; resolution=20e3, require_permittivity_change=false)
 
 Return a `Vector` of `Ground`'s and a `Vector` of distances at which the ground changes
-between `lat1, lon1` and `lat2, lon2` using path `resolution` in meters.
+between `tx` and `rx` using path `resolution` in meters.
 
 If `require_permittivity_change == true`, then if the relative permittivity doesn't change
 we don't consider it a ground change. This helps reduce the number of short small changes
@@ -77,10 +86,9 @@ that occur during a long path which have the same permittivity but a small chang
 conductivity that has a small influence on the electric field in the EIWG but comes a the
 cost of additional (potentially nearly identical) segments in the waveguide model.
 """
-function groundsegments(lat1, lon1, lat2, lon2;
-    resolution=20e3, require_permittivity_change=false)
+function groundsegments(tx::Transmitter, rx::Receiver; resolution=20e3, require_permittivity_change=false)
 
-    line = GeodesicLine(lon1, lat1; lon2=lon2, lat2=lat2)
+    line = GeodesicLine(tx, rx)
     pts = waypoints(line, dist=resolution)
 
     lat, lon, dist = first(pts).lat, first(pts).lon, first(pts).dist
@@ -134,13 +142,13 @@ function igrf(geoaz, lat, lon, year; alt=60e3)
 end
 
 """
-    igrf(lat1, lon1, lat2, lon2, year, dists; alt=60e3)
+    igrf(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
 
 Return a `Vector{BField}` at each distance in `dists` in meters along the path from position
 (`lat1`, `lon1`)° and (`lat2`, `lon2`)° in fractional `year`.
 """
-function igrf(lat1, lon1, lat2, lon2, year, dists; alt=60e3)
-    line = GeodesicLine(lon1, lat1; lon2=lon2, lat2=lat2)
+function igrf(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
+    line = GeodesicLine(tx, rx)
     geoaz, _ = inverse(lon1, lat1, lon2, lat2)
 
     bfields = Vector{BField}(undef, length(dists))

@@ -4,7 +4,7 @@ using GeographicLib
 using LongwaveModePropagator
 const LMP = LongwaveModePropagator
 
-include("lwpc_utils.jl")
+include("utils.jl")
 
 const GROUND_DATA = LMPTools.GROUND_DATA
 const LAT = GROUND_DATA["lat"]
@@ -12,6 +12,17 @@ const LON = GROUND_DATA["lon"]
 
 
 @testset "LMPTools" begin
+    # Extended functions
+    tx = TRANSMITTER[:NAA]
+    rx = Receiver("Boulder", 40.01, -105.244, 0.0, VerticalDipole())
+
+    gl1 = GeodesicLine(tx, rx)
+    gl2 = GeodesicLine(tx.longitude, tx.latitude; lon2=rx.longitude, lat2=rx.latitude)
+    for f in fieldnames(GeodesicLine)
+        # testing with ≈ because some values are ~1e-315
+        @test getfield(gl1, f) ≈ getfield(gl2, f)
+    end
+
     # Ground
     @test extrema(GROUND_DATA["lat"]) == (-90, 90)
     @test extrema(GROUND_DATA["lon"]) == (-180, 180)
@@ -38,15 +49,12 @@ const LON = GROUND_DATA["lon"]
         @test get_sigma(la, lo) ≈ GROUND[get_groundcode(la, lo)].σ atol=1e-8
     end
 
-    tx = TRANSMITTER[:NAA]
-    rx = Receiver("Boulder", 40.01, -105.244, 0.0, VerticalDipole())
-    grounds, distances = groundsegments(tx.latitude, tx.longitude, rx.latitude, rx.longitude)
+    grounds, distances = groundsegments(tx, rx)
     @test minimum(diff(distances)) >= 20e3
     @test length(grounds) != length(unique(grounds))
     @test length(grounds) == length(distances)
 
-    grounds, distances = groundsegments(tx.latitude, tx.longitude, rx.latitude, rx.longitude;
-                                        require_permittivity_change=true)
+    grounds, distances = groundsegments(tx, rx; require_permittivity_change=true)
     @test length(grounds) == length(unique(grounds))
     @test length(grounds) == length(distances)
 

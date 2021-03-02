@@ -4,6 +4,7 @@ authors = ["fgasdia <17058025+fgasdia@users.noreply.github.com>"]
 version = "0.0.1"
 
 [deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 GeographicLib = "c96ba436-a6fe-11e9-10ab-c9f3919c93d1"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 LongwaveModePropagator = "38c6559a-e0a7-48c6-827d-3f02e2d19cec"
@@ -11,10 +12,10 @@ Rotations = "6038ab10-8711-5258-84ad-4b1120ba62dc"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [extras]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 GeographicLib = "c96ba436-a6fe-11e9-10ab-c9f3919c93d1"
 LongwaveModePropagator = "38c6559a-e0a7-48c6-827d-3f02e2d19cec"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 
 [targets]
 test = ["Test", "LongwaveModePropagator", "GeographicLib", "CSV"]
