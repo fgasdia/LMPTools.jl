@@ -1,0 +1,21 @@
+file-mds    Output\
+file-lwf    Output\
+file-prf    cases\
+file-ndx    cases\
+case-id     bfield
+tx          bfield
+tx-data     fdtdnaa  24.000  44.646   67.281  100.0  0.0   0.000  0.0
+receivers   40.01 105.244
+range-max   2000
+ionosphere  range exponential bfield
+rx-data     vertical 0
+lwf-vs-dist 2000 5
+mc-options  full-wave 50 true
+print-lwf   1
+lwflds
+preseg
+ 0.0,,,,-1,4.0000,81,,0.550000,82.000
+ 160.0,,,,-1,4.0000,81,,0.550000,82.000
+ 40000
+start
+quit

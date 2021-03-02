@@ -117,8 +117,8 @@ end
 """
     igrf(geoaz, lat, lon, year; alt=60e3)
 
-Return a `BField` from IGRF-13 for position `lat`, `lon` in degrees at fractional
-`year`. `geoaz` is the geodetic azimuth of the path from transmitter to receiver.
+Return a `BField` from IGRF-13 for position (`lat`, `lon`)°  at fractional
+`year`. `geoaz`° is the geodetic azimuth of the path from transmitter to receiver.
 By default, the magnetic field at an altitude of 60,000 meters is returned,
 but this can be overridden with the `alt` keyword argument.
 """
@@ -131,6 +131,34 @@ function igrf(geoaz, lat, lon, year; alt=60e3)
     Rd = R*SVector(n,e,v)
 
     return BField(t*1e-9, Rd[1]/t, Rd[2]/t, Rd[3]/t)
+end
+
+"""
+    igrf(lat1, lon1, lat2, lon2, year, dists; alt=60e3)
+
+Return a `Vector{BField}` at each distance in `dists` in meters along the path from position
+(`lat1`, `lon1`)° and (`lat2`, `lon2`)° in fractional `year`.
+"""
+function igrf(lat1, lon1, lat2, lon2, year, dists; alt=60e3)
+    line = GeodesicLine(lon1, lat1; lon2=lon2, lat2=lat2)
+    geoaz, _ = inverse(lon1, lat1, lon2, lat2)
+
+    bfields = Vector{BField}(undef, length(dists))
+    for (i, d) in enumerate(dists)
+        lo, la, _ = forward(line, d)
+        bfields[i] = igrf(geoaz, la, lo, year; alt=alt)
+    end
+    return bfields
+end
+
+"""
+    igrf(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
+
+Return a `Vector{BField}` at each distance in `dists` in meters along the path from `tx` to
+`rx` in `year`.
+"""
+function igrf(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
+    return igrf(tx.latitude, tx.longitude, rx.latitude, rx.longitude, year, dists; alt=alt)
 end
 
 end
