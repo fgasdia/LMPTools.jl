@@ -1,4 +1,4 @@
-using Dates
+using Dates, Printf
 using Plots
 using CSV, DataFrames
 using LongwaveModePropagator
@@ -43,31 +43,43 @@ plot!(ld, la, label="LWPC", linewidth=1.5)
 # Zenith angle
 
 dt = DateTime(2021, 2, 1)
-lats = -89:1:89
-lons = -179:179
+lats = 15:89
+lons = -160:-60
 szas = [zenithangle(la, lo, dt) for la in lats, lo in lons]
 heatmap(lons, lats, szas,
         color=cgrad(:starrynight, [50, 70, 80, 85, 90, 95, 100, 110, 130]/180, rev=true), clims=(0, 180))
 
 
 
-function gpmap(lats::AbstractRange, lons::AbstractRange, data)
+function gpmap(file, lats::AbstractRange, lons::AbstractRange, data)
     size(data) == (length(lats), length(lons)) || throw(ArgumentError("data not compatible with lats, lons"))
     issorted(lons) && issorted(lats) || throw(ArgumentError("lats and lons must be sorted"))
 
-    polys = Matrix{Float64}(undef, length(szas)*4)
+    δlat = step(lats)/2
+    δlon = step(lons)/2
 
-    Δlat = step(lats)
-    Δlon = step(lons)
-    for j in lons
-        for i in lats
-
+    open(file, "w") do f
+        for j in eachindex(lons)
+            for i in eachindex(lats)
+                
+                str = @sprintf("%f, %f, %f\n", lons[j]-δlon, lats[i]-δlat, szas[i,j])
+                write(f, str)
+                str = @sprintf("%f, %f, %f\n", lons[j]-δlon, lats[i]+δlat, szas[i,j])
+                write(f, str)
+                str = @sprintf("%f, %f, %f\n", lons[j]+δlon, lats[i]+δlat, szas[i,j])
+                write(f, str)
+                str = @sprintf("%f, %f, %f\n", lons[j]+δlon, lats[i]-δlat, szas[i,j])
+                write(f, str)
+                
+                write(f, "\n")
+            end
         end
     end
 end
 
+dt = DateTime(2021, 2, 1)
+lats = 15:89
+lons = -150:-65
+szas = [zenithangle(la, lo, dt) for la in lats, lo in lons]
+gpmap("szas.csv", lats, lons, szas)
 
-df = DataFrame(lat=vec([la for la in lats, lo in lons]),
-               lon=vec([lo for la in lats, lo in lons]),
-               sza=vec(szas))
-CSV.write("szas.csv", df)

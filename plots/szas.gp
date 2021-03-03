@@ -1,5 +1,5 @@
-set terminal pngcairo size 600,450 lw 1 fontscale 1
-set output 'szas.png'
+set terminal pdfcairo #size 600,450 lw 1 fontscale 1 truecolor transparent
+set output 'szas.pdf'
 
 set loadpath 'C:\\Users\\forrest\\gnuplot\\' 'C:\\Users\\forrest\\gnuplot\\maps\\'
 
@@ -47,9 +47,13 @@ set xrange [-xhalfwidth:xhalfwidth]
 set yrange [ymin:ymax]
 set cbrange [0:180]
 
+set style fill solid noborder
+# set style fill transparent solid 0.8 noborder
+
 plot for [λ=-180:180:10] [ϕ=30:90] '+' u (x_lambert(λ,ϕ)):(y_lambert(λ,ϕ)) w l lc rgb '#dddddd' lw 0.5 notitle, \
 	 for [ϕ=30:90:10] [λ=-180:180:2] '+' u (x_lambert(λ,ϕ)):(y_lambert(λ,ϕ)) w l lc rgb '#dddddd' lw 0.5 notitle, \
+	 'szas.csv' u (x_lambert($1,$2)):(y_lambert($1,$2)):3 w filledcurves closed fc palette notitle, \
 	 'ne_50m_coastline_gp.csv' u (x_lambert($1,$2)):(y_lambert($1,$2)) w l lc 'black' lw 0.5 notitle, \
 	 'ne_50m_admin_1_states_provinces_lakes_gp.csv' u (x_lambert($1,$2)):(y_lambert($1,$2)) w l lc 'black' lw 0.5 notitle, \
-	 'szas.csv' u (x_lambert(column('lon'),column('lat'))):(y_lambert(column('lon'),column('lat'))):'sza' w polygons notitle
+	 
 	 # 'szas.csv' u (d2r(column('lon'))):(d2r(column('lat'))):'sza' w image notitle
