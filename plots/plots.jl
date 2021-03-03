@@ -1,3 +1,9 @@
+using Dates
+using Plots
+using CSV, DataFrames
+using LongwaveModePropagator
+using LMPTools
+
 # Ground
 
 tx = TRANSMITTER[:NAA]
@@ -42,3 +48,26 @@ lons = -179:179
 szas = [zenithangle(la, lo, dt) for la in lats, lo in lons]
 heatmap(lons, lats, szas,
         color=cgrad(:starrynight, [50, 70, 80, 85, 90, 95, 100, 110, 130]/180, rev=true), clims=(0, 180))
+
+
+
+function gpmap(lats::AbstractRange, lons::AbstractRange, data)
+    size(data) == (length(lats), length(lons)) || throw(ArgumentError("data not compatible with lats, lons"))
+    issorted(lons) && issorted(lats) || throw(ArgumentError("lats and lons must be sorted"))
+
+    polys = Matrix{Float64}(undef, length(szas)*4)
+
+    Δlat = step(lats)
+    Δlon = step(lons)
+    for j in lons
+        for i in lats
+
+        end
+    end
+end
+
+
+df = DataFrame(lat=vec([la for la in lats, lo in lons]),
+               lon=vec([lo for la in lats, lo in lons]),
+               sza=vec(szas))
+CSV.write("szas.csv", df)
