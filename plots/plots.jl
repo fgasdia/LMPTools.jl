@@ -78,8 +78,30 @@ function gpmap(file, lats::AbstractRange, lons::AbstractRange, data)
 end
 
 dt = DateTime(2021, 2, 1)
-lats = 15:89
-lons = -150:-65
+lats = 35:60
+lons = -110:-75
 szas = [zenithangle(la, lo, dt) for la in lats, lo in lons]
 gpmap("szas.csv", lats, lons, szas)
 
+
+function gppm3d(file, lats, lons, data)
+    lon=vec([lo for la in lats, lo in lons])
+    lat=vec([la for la in lats, lo in lons])
+    sza=vec(szas)
+
+    open(file, "w") do f
+        for j in eachindex(lons)
+            for i in eachindex(lats)
+                str = @sprintf("%f, %f, %f\n", lons[j], lats[i], szas[i,j])
+                write(f, str)
+            end
+            write(f, "\n")
+        end
+    end
+end
+
+dt = DateTime(2021, 2, 1)
+lats = 40:65
+lons = -145:-60
+szas = [zenithangle(la, lo, dt) for la in lats, lo in lons]
+gppm3d("szas_3col.csv", lats, lons, szas)
