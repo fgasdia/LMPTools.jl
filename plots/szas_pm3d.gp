@@ -4,7 +4,7 @@ set output 'szas_pm3d.png'
 set loadpath 'C:\\Users\\forrest\\gnuplot\\' 'C:\\Users\\forrest\\gnuplot\\maps\\'
 
 load 'common.cfg'
-load 'mydistinctcolors.pal'
+load 'roma.pal'
 
 set angle degrees
 
@@ -49,8 +49,10 @@ set xrange [-xhalfwidth:xhalfwidth]
 set yrange [ymin:ymax]
 set zrange [0:1]
 set cbrange [0:180]
+set cbtics 30
 
 set colorbox user size 0.03,0.5 orig 0.87,0.25
+set cbtics font ",9" offset -1
 
 # set style fill transparent solid 0.8 noborder
 
@@ -62,4 +64,8 @@ splot 'szas_3col.csv' u (x_lambert($1,$2)):(y_lambert($1,$2)):(0):3 w pm3d notit
 	  for [ϕ=30:90:10] [λ=-180:180:2] '+' u (x_lambert(λ,ϕ)):(y_lambert(λ,ϕ)):(1) w l lc rgb '#dddddd' lw 0.5 notitle, \
 	  'ne_50m_coastline_gp.csv' u (x_lambert($1,$2)):(y_lambert($1,$2)):(0) w l lc 'black' lw 0.5 notitle, \
 	  'ne_50m_admin_1_states_provinces_lakes_gp.csv' u (x_lambert($1,$2)):(y_lambert($1,$2)):(0) w l lc 'black' lw 0.5 notitle, \
-	 
+
+
+# See also: https://stackoverflow.com/questions/18927493/problematic-moire-pattern-in-image-produced-with-gnuplot-pm3d-and-pdf-output/18954245
+# or: https://tex.stackexchange.com/questions/130533/big-data-surface-plots-call-gnuplot-from-tikz-to-generate-bitmap-and-include-au/131106#131106
+# for plotting the heatmap as a png and including in a vector file
