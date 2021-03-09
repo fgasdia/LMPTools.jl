@@ -7,12 +7,11 @@ module LMPTools
 
 using Rotations, StaticArrays
 using HDF5, Dates
-using GeographicLib
+using GeographicLib, SatelliteToolbox
 using LongwaveModePropagator
 
 project_path(parts...) = normpath(@__DIR__, "..", parts...)
 
-include("igrf13syn.jl")
 const GROUND_DATA = h5read(project_path("data", "conductivity_data.h5"), "/")
 
 const TRANSMITTER = Dict(
