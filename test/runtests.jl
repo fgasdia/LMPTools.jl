@@ -85,4 +85,11 @@ const LON = GROUND_DATA["lon"]
     @test zenithangle(lat, lon, 2021, 2, 1, 20) ≈ 90 - 10.9651 atol=0.01
     @test zenithangle(lat, lon, 2021, 9, 15, 5) ≈ 90 - -20.1376 atol=0.01
     @test zenithangle(lat, lon, 2021, 9, 15, 19.25) ≈ 90 - 30.7122 atol=0.01
+
+    @test isday(zenithangle(lat, lon, 2021, 2, 1, 16)) == true  # day
+    @test isday(zenithangle(lat, lon, 2021, 2, 1, 22)) == true
+    @test isday(zenithangle(lat, lon, 2021, 2, 2, 1)) == false  # night
+    @test isday(zenithangle(lat, lon, 2021, 2, 2, 6)) == false
+    @test isday(zenithangle(lat, lon, 2021, 2, 2, 8)) == false
+    @test isday(zenithangle(lat, lon, 2021, 2, 2, 11)) == false
 end

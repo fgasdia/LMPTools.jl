@@ -24,7 +24,7 @@ const TRANSMITTER = Dict(
 
 export TRANSMITTER
 export get_ground, get_groundcode, get_epsilon, get_sigma, groundsegments
-export igrf, zenithangle
+export igrf, zenithangle, isday
 
 
 ###
@@ -271,6 +271,15 @@ function zenithangle(lat, lon, dt::DateTime, Δτ=nothing)
     h = hour(dt) + minute(dt)/60 + second(dt)/3600 + millisecond(dt)/3600_000
 
     return zenithangle(lat, lon, y, m, d, h, Δτ)
+end
+
+"""
+    isday(sza)
+
+Return `true` if solar zenith angle `sza` is less than 90°, otherwise return `false`.
+"""
+function isday(sza)
+    abs(sza) < 90 ? true : false
 end
 
 end
