@@ -70,7 +70,10 @@ const LON = GROUND_DATA["lon"]
     calcb = BField(50.6701e-6, deg2rad(67.7737), deg2rad(az-declination))
 
     bfield = igrf(az, tx.latitude, tx.longitude, 2020)
-    all(isapprox(getfield(bfield,f), getfield(calcb,f); rtol=1e-4) for f in fieldnames(BField))
+    @test all(isapprox(getfield(bfield,f), getfield(calcb,f); rtol=1e-4) for f in fieldnames(BField))
+
+    bfield2 = only(igrf(tx, rx, 2020, 0.0))
+    @test all(isapprox(getfield(bfield2,f), getfield(bfield,f)) for f in fieldnames(BField))
 
     # Zenith angle
 

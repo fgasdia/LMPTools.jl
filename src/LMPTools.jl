@@ -156,12 +156,12 @@ end
 """
     igrf(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
 
-Return a `Vector{BField}` at each distance in `dists` in meters along the path from position
-(`lat1`, `lon1`)° and (`lat2`, `lon2`)° in fractional `year`.
+Return a `Vector{BField}` at each distance in `dists` in meters along the path from `tx`
+to `rx` in fractional `year`.
 """
 function igrf(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
     line = GeodesicLine(tx, rx)
-    geoaz, _ = inverse(lon1, lat1, lon2, lat2)
+    geoaz = inverse(tx.longitude, tx.latitude, rx.longitude, rx.latitude).azi
 
     bfields = Vector{BField}(undef, length(dists))
     for (i, d) in enumerate(dists)
