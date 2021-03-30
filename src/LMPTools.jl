@@ -23,6 +23,7 @@ const TRANSMITTER = Dict(
 )
 
 export TRANSMITTER
+export range
 export get_ground, get_groundcode, get_epsilon, get_sigma, groundsegments
 export igrf, zenithangle, isday
 
@@ -32,6 +33,16 @@ export igrf, zenithangle, isday
 
 function GeographicLib.GeodesicLine(tx::Transmitter, rx::Receiver)
     return GeodesicLine(tx.longitude, tx.latitude; lon2=rx.longitude, lat2=rx.latitude)
+end
+
+"""
+    range(tx::Transmitter, rx::Receiver)
+
+Return the range (great-circle distance, but on the WGS-84 ellipsoid) in meters between
+`tx` and `rx`.
+"""
+function Base.range(tx::Transmitter, rx::Receiver)
+    return inverse(tx.longitude, tx.latitude, rx.longitude, rx.latitude).dist
 end
 
 

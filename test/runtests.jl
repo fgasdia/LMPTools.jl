@@ -23,6 +23,9 @@ const LON = GROUND_DATA["lon"]
         @test getfield(gl1, f) ≈ getfield(gl2, f)
     end
 
+    # https://www.cqsrg.org/tools/GCDistance/
+    @test range(tx, rx) ≈ 3142.0e3 atol=100
+
     # Ground
     @test extrema(GROUND_DATA["lat"]) == (-90, 90)
     @test extrema(GROUND_DATA["lon"]) == (-180, 180)
