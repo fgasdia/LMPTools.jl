@@ -2,6 +2,8 @@
     LMPTools
 
 Convenience and utility functions for LongwaveModePropagator.jl.
+
+This is a testing ground for functions that may be added to LongwaveModePropagator.
 """
 module LMPTools
 
