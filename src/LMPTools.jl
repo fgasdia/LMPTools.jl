@@ -289,10 +289,10 @@ end
 """
     isday(sza)
 
-Return `true` if solar zenith angle `sza` is less than 90°, otherwise return `false`.
+Return `true` if solar zenith angle `sza` is less than 98°, otherwise return `false`.
 """
 function isday(sza)
-    abs(sza) < 90 ? true : false
+    abs(sza) < 98 ? true : false
 end
 
 end
