@@ -27,7 +27,7 @@ const TRANSMITTER = Dict(
 export TRANSMITTER
 export range
 export get_ground, get_groundcode, get_epsilon, get_sigma, groundsegments
-export igrf, zenithangle, isday
+export igrf, zenithangle, isday, ferguson
 
 
 ###
@@ -158,6 +158,9 @@ end
 
 Return a `Vector{BField}` at each distance in `dists` in meters along the path from `tx`
 to `rx` in fractional `year`.
+
+If applying `igrf` to a single distance, it is recommended to use the `geoaz`, `lat`, `lon`
+form of [`igrf`](@ref). 
 """
 function igrf(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
     line = GeodesicLine(tx, rx)
@@ -294,5 +297,28 @@ Return `true` if solar zenith angle `sza` is less than 98°, otherwise return `f
 function isday(sza)
     abs(sza) < 98 ? true : false
 end
+
+"""
+    ferguson(lat, sza, month_num::Int)
+    ferguson(lat, sza, dt::DateTime)
+
+Ferguson ionosphere for geographic latitude `lat` in degrees, solar zenith angle `sza` in
+degrees, and month number `month_num` or `DateTime` `dt`.
+"""
+function ferguson(lat, sza, month_num::Integer)
+    lat = deg2rad(lat)
+    sza = deg2rad(sza)
+
+    cos_lat = cos(lat)
+    cos_sza = cos(sza)
+
+    month_scalar = cospi(2*(month_num-0.5)/12)
+
+    hprime = 74.37 - 8.097*cos_sza + 5.779*cos_lat - 1.213*month_scalar
+    beta = 0.3849 - 0.1658*cos_sza - 0.08584*cos_lat + 0.1296*month_scalar
+
+    return hprime, beta
+end
+ferguson(lat, sza, dt::DateTime) = ferguson(lat, sza, month(dt))
 
 end
