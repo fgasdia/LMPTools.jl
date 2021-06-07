@@ -1,6 +1,5 @@
 using Dates, Printf
 using Plots
-using CSV, DataFrames
 using LongwaveModePropagator
 using LMPTools
 
@@ -105,3 +104,22 @@ lats = 40:65
 lons = -145:-60
 szas = [zenithangle(la, lo, dt) for la in lats, lo in lons]
 gppm3d("szas_3col.csv", lats, lons, szas)
+
+
+# Ionospheres
+
+dt = DateTime(2021, 2, 1)
+lats = 15:89
+lons = -160:-60
+x = [ferguson(la, zenithangle(la, lo, dt), dt) for la in lats, lo in lons]
+heatmap(lons, lats, getindex.(x,1), color=:amp, clims=(68, 90))
+
+dt = DateTime(2020, 3, 1, 2)
+szas = [zenithangle(la, lo, dt) for la in lats, lo in lons]
+
+heatmap(lons, lats, szas,
+        color=cgrad(:starrynight, [50, 70, 80, 85, 90, 95, 100, 110, 130]/180, rev=true), clims=(0, 180))
+
+hprimes, betas = flatlinearterminator(szas)
+heatmap(lons, lats, hprimes, color=:amp, clims=(68, 90))
+heatmap(lons, lats, betas, color=:tempo, clims=(0.2, 0.6))
