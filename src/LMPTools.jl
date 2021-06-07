@@ -304,6 +304,15 @@ end
 
 Ferguson ionosphere for geographic latitude `lat` in degrees, solar zenith angle `sza` in
 degrees, and month number `month_num` or `DateTime` `dt`.
+
+If the month term of the ionosphere fit is not desired, specify `month_num = 0`.
+
+The higher order terms in [^Ferguson1980] (sunspot number and magnetic absorption) are ignored.
+
+# References
+
+[Ferguson1980]: J. A. Ferguson, "Ionospheric profiles for predicting nighttime VLF/LF
+    propagation," NOSC/TR-530, 1980.
 """
 function ferguson(lat, sza, month_num::Integer)
     lat = deg2rad(lat)
