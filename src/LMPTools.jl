@@ -27,7 +27,7 @@ const TRANSMITTER = Dict(
 export TRANSMITTER
 export range
 export get_ground, get_groundcode, get_epsilon, get_sigma, groundsegments
-export igrf, zenithangle, isday, ferguson
+export igrf, zenithangle, isday, ferguson, flatlinearterminator
 
 
 ###
@@ -330,4 +330,61 @@ function ferguson(lat, sza, month_num::Integer)
 end
 ferguson(lat, sza, dt::DateTime) = ferguson(lat, sza, month(dt))
 
+"""
+    flatlinearterminator(sza, hp_day=74, hp_night=86, b_day=0.3, b_night=0.5)
+
+A simple terminator model with flat day and night ionospheres and a linear transition
+between `sza_min` and `sza_max`. Solar zenith angle `sza` is in degrees.
+"""
+function flatlinearterminator(sza, hp_day=74, hp_night=86, b_day=0.3, b_night=0.5;
+    sza_min=90, sza_max=100)
+
+    if sza_min < sza < sza_max
+        # Linear trend between day and night
+        m_hprime = (hp_night - hp_day) / (sza_max - sza_min)
+        m_beta = (b_night - b_day) / (sza_max - sza_min)
+
+        hprime = m_hprime*(sza - sza_min) + hp_day
+        beta = m_beta*(sza - sza_min) + b_day
+    elseif sza < sza_min
+        hprime = hp_day
+        beta = b_day
+    else  # sza > sza_max
+        hprime = hp_night
+        beta = b_night
+    end
+
+    return hprime, beta
 end
+
+"""
+    flatlinearterminator(sza::AbstractArray; hp_day=74, hp_night=86, b_day=0.3, b_night=0.5)
+
+Given an array of `sza`, return the corresponding arrays of h′s and βs.
+"""
+function flatlinearterminator(sza::AbstractArray, hp_day=74, hp_night=86, b_day=0.3, b_night=0.5;
+    sza_min=90, sza_max=100)
+
+    # Linear trend between day and night
+    m_hprime = (hp_night - hp_day) / (sza_max - sza_min)
+    m_beta = (b_night - b_day) / (sza_max - sza_min)
+
+    hprimes = similar(sza, Float64)
+    betas = similar(hprimes)
+    for i in eachindex(sza)
+        if sza_min < sza[i] < sza_max  
+            hprimes[i] = m_hprime*(sza[i] - sza_min) + hp_day
+            betas[i] = m_beta*(sza[i] - sza_min) + b_day
+        elseif sza[i] < sza_min
+            hprimes[i] = hp_day
+            betas[i] = b_day
+        else  # sza > sza_max
+            hprimes[i] = hp_night
+            betas[i] = b_night
+        end
+    end
+
+    return hprimes, betas
+end
+
+end  # module

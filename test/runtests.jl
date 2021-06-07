@@ -98,4 +98,18 @@ const LON = GROUND_DATA["lon"]
     @test isday(zenithangle(lat, lon, 2021, 2, 2, 6)) == false
     @test isday(zenithangle(lat, lon, 2021, 2, 2, 8)) == false
     @test isday(zenithangle(lat, lon, 2021, 2, 2, 11)) == false
+
+    # Ionospheres
+
+    dt = DateTime(2020, 3, 1, 2)
+    lats = 15:89
+    lons = -160:-60
+    szas = [zenithangle(la, lo, dt) for la in lats, lo in lons]
+
+    # Compare number and array-specialized form
+    x = [flatlinearterminator(s) for s in szas]
+    hprimes, betas = getindex.(x,1), getindex.(x,2)
+    hprimes_arr, betas_arr = flatlinearterminator(szas)
+    @test hprimes == hprimes_arr
+    @test betas == betas_arr
 end
