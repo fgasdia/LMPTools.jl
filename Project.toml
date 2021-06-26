@@ -1,7 +1,7 @@
 name = "LMPTools"
 uuid = "9da4b389-a4e8-40b7-9cd7-952b7f4c5d81"
 authors = ["fgasdia <17058025+fgasdia@users.noreply.github.com>"]
-version = "0.0.4"
+version = "0.0.5"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
@@ -15,7 +15,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 [compat]
 GeographicLib = "0.4"
 HDF5 = "0.15"
-LongwaveModePropagator = "0.1,0.2"
+LongwaveModePropagator = "0.1,0.2,0.3"
 Rotations = "1"
 SatelliteToolbox = "0.8,0.9"
 StaticArrays = "1"
