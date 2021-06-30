@@ -75,7 +75,7 @@ zenithangle(lat, lon, dt::DateTime, Δτ=nothing)
 zenithangle(lat, lon, yr::Int, mo::Int, dy::Int, hr::Real, Δτ=nothing)
 ```
 
-to compute the solar zenith angle in degrees using algorithm 5 from [Grena, 2012. doi: 10.1016/j.solener.2012.01.024](https://doi.org/10.1016/j.solener.2012.01.024).
+to compute the solar zenith angle in degrees using Algorithm 5 from [Grena, 2012. doi: 10.1016/j.solener.2012.01.024](https://doi.org/10.1016/j.solener.2012.01.024).
 
 ---
 
