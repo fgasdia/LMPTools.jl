@@ -2,8 +2,6 @@
     LMPTools
 
 Convenience and utility functions for LongwaveModePropagator.jl.
-
-This is a testing ground for functions that may be added to LongwaveModePropagator.
 """
 module LMPTools
 
@@ -27,7 +25,8 @@ const TRANSMITTER = Dict(
 export TRANSMITTER
 export range
 export get_ground, get_groundcode, get_epsilon, get_sigma, groundsegments
-export igrf, zenithangle, isday, ferguson, flatlinearterminator
+export igrf
+export zenithangle, isday, ferguson, flatlinearterminator, fourierperturbation
 
 
 ###
@@ -279,7 +278,7 @@ end
 """
     zenithangle(lat, lon, dt::DateTime, Δτ=nothing)
 
-Return the solar zenith angle in radians for universal `dt` with `Δτ` difference in seconds
+Return the solar zenith angle in degrees for universal `dt` with `Δτ` difference in seconds
 between terrestrial time and universal time. The position `lat`, `lon` should be in degrees.
 """
 function zenithangle(lat, lon, dt::DateTime, Δτ=nothing)
@@ -299,7 +298,7 @@ function isday(sza)
 end
 
 """
-    ferguson(lat, sza, month_num::Int)
+    ferguson(lat, sza, month_num::Int) → (h′, β)
     ferguson(lat, sza, dt::DateTime)
 
 Ferguson ionosphere for geographic latitude `lat` in degrees, solar zenith angle `sza` in
@@ -331,7 +330,7 @@ end
 ferguson(lat, sza, dt::DateTime) = ferguson(lat, sza, month(dt))
 
 """
-    flatlinearterminator(sza, hp_day=74, hp_night=86, b_day=0.3, b_night=0.5)
+    flatlinearterminator(sza, hp_day=74, hp_night=86, b_day=0.3, b_night=0.5) → (h′, β)
 
 A simple terminator model with flat day and night ionospheres and a linear transition
 between `sza_min` and `sza_max`. Solar zenith angle `sza` is in degrees.
@@ -358,7 +357,7 @@ function flatlinearterminator(sza, hp_day=74, hp_night=86, b_day=0.3, b_night=0.
 end
 
 """
-    flatlinearterminator(sza::AbstractArray; hp_day=74, hp_night=86, b_day=0.3, b_night=0.5)
+    flatlinearterminator(sza::AbstractArray; hp_day=74, hp_night=86, b_day=0.3, b_night=0.5) → (h′, β)
 
 Given an array of `sza`, return the corresponding arrays of h′s and βs.
 """
@@ -385,6 +384,44 @@ function flatlinearterminator(sza::AbstractArray, hp_day=74, hp_night=86, b_day=
     end
 
     return hprimes, betas
+end
+
+"""
+    fourierperturbation(sza, coeff; a=deg2rad(45)/2)
+
+Return the perturbation produced by the Fourier series:
+```
+pert = coeff[1] + coeff[2]*cos(sza*π/a) + coeff[3]*cos(sza*2π/a) + coeff[4]*sin(sza*π/a) + coeff[5]*sin(sza*2π/a)
+```
+for solar zenith angle `sza` in degrees.
+
+This can be used to produce simulated ionospheres in conjunction with [`ferguson`](@ref).
+
+# Examples
+```julia-repl
+julia> lat, lon = 45, -105
+julia> dt = DateTime(2020, 1, 15);
+julia> sza = zenithangle(lat, lon, dt);
+julia> h, b = ferguson(lat, sza, dt);
+
+julia> coeffH = (1.345, 0.668, -0.177, -0.248, 0.096);
+julia> hpert = fourierperturbation(sza, coeffH)
+1.7991484480844766
+
+julia> h + hpert
+79.5769471288202
+```
+"""
+function fourierperturbation(sza, coeff; a=deg2rad(45)/2)
+    sza = deg2rad(sza)
+
+    pert = coeff[1] +
+        coeff[2]*cospi(sza/a) +
+        coeff[4]*sinpi(sza/a) +
+        coeff[3]*cospi(sza*2/a) +
+        coeff[5]*sinpi(sza*2/a)
+    
+    return pert
 end
 
 end  # module

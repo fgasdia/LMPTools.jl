@@ -112,4 +112,13 @@ const LON = GROUND_DATA["lon"]
     hprimes_arr, betas_arr = flatlinearterminator(szas)
     @test hprimes == hprimes_arr
     @test betas == betas_arr
+
+    # Sanity tests on fourierperturbation
+    coeff = zeros(5)
+    pert = fourierperturbation.(szas, (coeff,))
+    @test iszero(pert)
+
+    coeff = [1, 0, 0, 0, 0]
+    pert = fourierperturbation.(szas, (coeff,))
+    @test all(isequal(1), pert)
 end
