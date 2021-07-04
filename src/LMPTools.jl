@@ -26,7 +26,7 @@ export TRANSMITTER
 export range
 export get_ground, get_groundcode, get_epsilon, get_sigma, groundsegments
 export igrf
-export zenithangle, isday, ferguson, flatlinearterminator, fourierperturbation
+export zenithangle, isday, ferguson, flatlinearterminator, smoothterminator, fourierperturbation
 
 
 ###
@@ -384,6 +384,35 @@ function flatlinearterminator(sza::AbstractArray, hp_day=74, hp_night=86, b_day=
     end
 
     return hprimes, betas
+end
+
+"""
+    smoothterminator(sza, hp_day=74, hp_night=86, b_day=0.3, b_night=0.5;
+        sza_min=90, sza_max=100, steepness=1) → (h′, β)
+    
+A smooth terminator model using a logistic curve from day to night ionospheres as a function
+of solar zenith angle `sza`.
+
+The `steepness` parameter `1` with the default values of `sza_min` and `sza_max`
+approximately asymptotes to the day and night values by `sza_min` and `sza_max` and is
+centered on their midpoint.
+"""
+function smoothterminator(sza, hp_day=74, hp_night=86, b_day=0.3, b_night=0.5;
+    sza_min=90, sza_max=100, steepness=1)
+
+    hp_night > hp_day || throw(ArgumentError("`hp_night` should be greater than `hp_day`."))
+    b_night > b_day || throw(ArgumentError("`b_night` should be greater than `b_day`."))
+    sza_max > sza_min || throw(ArgumentError("`sza_max` should be greater than `sza_min`."))
+
+    hprime_range = hp_night - hp_day
+    beta_range = b_night - b_day
+    sza_mid = (sza_max - sza_min)/2 + sza_min
+
+    # logistic curve
+    hprime = hprime_range/(1 + exp(-steepness*(sza - sza_mid))) + hp_day
+    beta = beta_range/(1 + exp(-steepness*(sza - sza_mid))) + b_day
+
+    return hprime, beta
 end
 
 """

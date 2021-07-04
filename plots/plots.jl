@@ -123,3 +123,7 @@ heatmap(lons, lats, szas,
 hprimes, betas = flatlinearterminator(szas)
 heatmap(lons, lats, hprimes, color=:amp, clims=(68, 90))
 heatmap(lons, lats, betas, color=:tempo, clims=(0.2, 0.6))
+
+ionos = smoothterminator.(szas)
+heatmap(lons, lats, getindex.(ionos,1), color=:amp, clims=(68, 90))
+heatmap(lons, lats, getindex.(ionos,2), color=:tempo, clims=(0.2, 0.6))

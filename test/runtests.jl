@@ -113,6 +113,18 @@ const LON = GROUND_DATA["lon"]
     @test hprimes == hprimes_arr
     @test betas == betas_arr
 
+    h, b = smoothterminator(50)
+    @test h ≈ 74  # hp_day
+    @test b ≈ 0.3  # b_day
+
+    h, b = smoothterminator(130)
+    @test h ≈ 86  # hp_night
+    @test b ≈ 0.5  # b_night
+
+    h, b = smoothterminator(95)
+    @test 74 < h < 86
+    @test 0.3 < b < 0.5
+
     # Sanity tests on fourierperturbation
     coeff = zeros(5)
     pert = fourierperturbation.(szas, (coeff,))
