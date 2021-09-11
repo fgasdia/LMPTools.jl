@@ -5,6 +5,7 @@ Convenience and utility functions for LongwaveModePropagator.jl.
 """
 module LMPTools
 
+using PyCall, Conda
 using Rotations, StaticArrays
 using HDF5, Dates
 using GeographicLib, SatelliteToolbox
@@ -22,12 +23,29 @@ const TRANSMITTER = Dict(
     :NPM => Transmitter("NPM", 21.420, -158.151, 21.4e3)
 )
 
+const CHAOS = PyNULL()
+const CHAOS_MODEL = PyNULL()
+
 export TRANSMITTER
 export range
 export get_ground, get_groundcode, get_epsilon, get_sigma, groundsegments
-export igrf
+export igrf, chaos
 export zenithangle, isday, ferguson, flatlinearterminator, smoothterminator, fourierperturbation
 
+
+function __init__()
+    # Install chaosmagpy
+    Conda.add(["numpy", "scipy", "pandas", "cython", "cartopy", "matplotlib", "h5py"])
+
+    Conda.pip_interop(true)
+    Conda.pip("install", ["cdflib", "hdf5storage", "lxml"])
+    Conda.pip("install", "chaosmagpy")
+
+    cp = pyimport("chaosmagpy")
+    model = cp.load_CHAOS_matfile(joinpath(@__DIR__, "..", "CHAOS-7.8.mat"))
+    copy!(CHAOS, cp)
+    copy!(CHAOS_MODEL, model)
+end
 
 ###
 # Extend library functions
@@ -173,6 +191,73 @@ function igrf(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
     return bfields
 end
 
+"""
+    chaos(geoaz, lat, lon, year; alt=60e3)
+
+Return a `BField` from CHAOS-7 using internal and external sources for position
+(`lat`, `lon`)°  at fractional `year`.
+
+`geoaz`° is the geodetic azimuth of the path from transmitter to receiver.
+By default, the magnetic field at an altitude of 60,000 meters is returned,
+but this can be overridden with the `alt` keyword argument.
+
+# References
+
+[^1]: C. C. Finlay et al., “The CHAOS-7 geomagnetic field model and observed changes in the
+South Atlantic Anomaly,” Earth Planets Space, vol. 72, no. 1, Art. no. 1, Dec. 2020,
+doi: 10.1186/s40623-020-01252-9.
+"""
+function chaos(geoaz, lat, lon, year; alt=60e3)
+    Re = 6371.2
+    r = Re + alt/1000
+    t = CHAOS.data_utils.dyear_to_mjd(year)  # MJD2000
+
+    theta = 90 - lat  # geocentric co-lat (deg)
+    phi = lon  # geocentric lon (deg)
+
+    Br_gsm, Bt_gsm, Bp_gsm = CHAOS_MODEL.synth_values_gsm(t, r, theta, phi)
+    Br_sm, Bt_sm, Bp_sm = CHAOS_MODEL.synth_values_sm(t, r, theta, phi)
+    Br_t, Bt_t, Bp_t = CHAOS_MODEL.synth_values_tdep(t, r, theta, phi)
+    Br_s, Bt_s, Bp_s = CHAOS_MODEL.synth_values_static(r, theta, phi)
+
+    Br_sm, Bt_sm, Bp_sm = only(Br_sm), only(Bt_sm), only(Bp_sm)
+    Br_t, Bt_t, Bp_t = only(Br_t), only(Bt_t), only(Bp_t)
+    Br_s, Bt_s, Bp_s = only(Br_s), only(Bt_s), only(Bp_s)
+
+    u = Br_gsm + Br_sm + Br_t + Br_s  # up
+    s = Bt_gsm + Bt_sm + Bt_t + Bt_s  # south
+    e = Bp_gsm + Bp_sm + Bp_t + Bp_s  # east
+
+    # Rotate the "use" frame to the propagation path xyz frame
+    # negate az to correct rotation direction for downward pointing v
+    R = RotXZ(π, -deg2rad(geoaz))
+    Rd = R*SVector(-s,e,-u)
+
+    mag = hypot(u, s, e)
+    return BField(mag*1e-9, Rd[1]/mag, Rd[2]/mag, Rd[3]/mag)
+end
+
+"""
+    chaos(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
+
+Return a `Vector{BField}` at each distance in `dists` in meters along the path from `tx`
+to `rx` in fractional `year`.
+
+If applying `igrf` to a single distance, it is recommended to use the `geoaz`, `lat`, `lon`
+form of [`igrf`](@ref). 
+"""
+function chaos(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
+    line = GeodesicLine(tx, rx)
+    geoaz = inverse(tx.longitude, tx.latitude, rx.longitude, rx.latitude).azi
+
+    # TODO: the Python chaosmagpy package will take multiple lats and lons at once
+    bfields = Vector{BField}(undef, length(dists))
+    for (i, d) in enumerate(dists)
+        lo, la, _ = forward(line, d)
+        bfields[i] = chaos(geoaz, la, lo, year; alt=alt)
+    end
+    return bfields
+end
 
 ###
 # Sun position

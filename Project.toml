@@ -4,18 +4,22 @@ authors = ["fgasdia <17058025+fgasdia@users.noreply.github.com>"]
 version = "0.0.7"
 
 [deps]
+Conda = "8f4d0f93-b110-5947-807f-2305c1781a2d"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 GeographicLib = "c96ba436-a6fe-11e9-10ab-c9f3919c93d1"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 LongwaveModePropagator = "38c6559a-e0a7-48c6-827d-3f02e2d19cec"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 Rotations = "6038ab10-8711-5258-84ad-4b1120ba62dc"
 SatelliteToolbox = "6ac157d9-b43d-51bb-8fab-48bf53814f4a"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
+Conda = "1"
 GeographicLib = "0.4"
 HDF5 = "0.15"
 LongwaveModePropagator = "0.1,0.2,0.3"
+PyCall = "1"
 Rotations = "1"
 SatelliteToolbox = "0.8,0.9"
 StaticArrays = "1"

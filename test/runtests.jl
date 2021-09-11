@@ -1,5 +1,6 @@
 using Test, LMPTools
 using Dates
+using PyCall
 using GeographicLib
 using LongwaveModePropagator
 const LMP = LongwaveModePropagator
@@ -7,8 +8,8 @@ const LMP = LongwaveModePropagator
 include("utils.jl")
 
 const GROUND_DATA = LMPTools.GROUND_DATA
-const LAT = GROUND_DATA["lat"]
-const LON = GROUND_DATA["lon"]
+const GROUND_LAT = GROUND_DATA["lat"]
+const GROUND_LON = GROUND_DATA["lon"]
 
 
 @testset "LMPTools" begin
@@ -43,7 +44,7 @@ const LON = GROUND_DATA["lon"]
     @test LMPTools.searchsortednearest(GROUND_DATA["lat"], -78.4) ==
         findfirst(isequal(-78.5), GROUND_DATA["lat"])
 
-    for la in LAT, lo in LON
+    for la in GROUND_LAT, lo in GROUND_LON
         @test get_ground("epsilonmap", la, lo) == get_epsilon(la, lo)
         @test get_ground("sigmamap", la, lo) == get_sigma(la, lo)
         @test get_ground("codemap", la, lo) == get_groundcode(la, lo)
@@ -74,6 +75,10 @@ const LON = GROUND_DATA["lon"]
 
     bfield2 = only(igrf(tx, rx, 2020, 0.0))
     @test all(isapprox(getfield(bfield2,f), getfield(bfield,f)) for f in fieldnames(BField))
+
+    # chaos does not match igrf, but they should be reasonably close
+    bfield3 = chaos(az, tx.latitude, tx.longitude, 2020)
+    @test all(isapprox(getfield(bfield3,f), getfield(bfield,f); rtol=0.1) for f in fieldnames(BField))
 
     # Zenith angle
 

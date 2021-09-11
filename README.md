@@ -50,7 +50,7 @@ which can be used to generate a `Vector` of `Ground`s and a `Vector` of distance
 
 ## Magnetic field
 
-This package provides convenience functions for interacting with the IGRF magnetic field model through `igrf13syn` from [SatelliteToolbox.jl](https://github.com/JuliaSpace/SatelliteToolbox.jl).
+This package provides convenience functions for interacting with the IGRF magnetic field model through `igrf13syn` from [SatelliteToolbox.jl](https://github.com/JuliaSpace/SatelliteToolbox.jl) and the CHAOS-7 magnetic field through the Python package [ChaosMagPy](https://github.com/ancklo/ChaosMagPy).
 
 ```julia
 igrf(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
@@ -65,6 +65,12 @@ igrf(geoaz, lat, lon, year; alt=60e3)
 ```
 
 if the magnetic field is required at a single location `lat`, `lon`, if the geodetic azimuth `geoaz` of the path from transmitter to receiver is already known.
+
+The `chaos` function uses the complete CHAOS model (internal and external sources).
+
+```julia
+chaos(geoaz, lat, lon, year; alt=60e3)
+```
 
 ## Ionospheres
 
