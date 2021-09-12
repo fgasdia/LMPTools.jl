@@ -204,8 +204,8 @@ but this can be overridden with the `alt` keyword argument.
 # References
 
 [^1]: C. C. Finlay et al., “The CHAOS-7 geomagnetic field model and observed changes in the
-South Atlantic Anomaly,” Earth Planets Space, vol. 72, no. 1, Art. no. 1, Dec. 2020,
-doi: 10.1186/s40623-020-01252-9.
+    South Atlantic Anomaly,” Earth Planets Space, vol. 72, no. 1, Art. no. 1, Dec. 2020,
+    doi: 10.1186/s40623-020-01252-9.
 """
 function chaos(geoaz, lat, lon, year; alt=60e3)
     Re = 6371.2
