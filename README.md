@@ -12,9 +12,11 @@ A dictionary of some VLF transmitters as `Transmitter` types can be obtained:
 TRANSMITTER
 ```
 
+Note that only each transmitter latitude, longitude, and frequency is correct. The power and altitude use the default values for LongwaveModePropagator's `Transmitter` type.
+
 ---
 
-The convenience function `range` to compute the great circle distance on the WGS84 ellipsoid between `Transmitter` and `Receiver` types is defined:
+A convenience function `range` is defined to compute the great circle distance on the WGS84 ellipsoid between `Transmitter` and `Receiver` types:
 
 ```julia
 tx = TRANSMITTER[:NAA]
