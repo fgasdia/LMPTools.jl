@@ -192,7 +192,7 @@ function igrf(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
 end
 
 """
-    chaos(geoaz, lat, lon, year; alt=60e3)
+    chaos(geoaz, lat::Real, lon:Real, year; alt=60e3)
 
 Return a `BField` from CHAOS-7 using internal and external sources for position
 (`lat`, `lon`)°  at fractional `year`.
@@ -207,7 +207,7 @@ but this can be overridden with the `alt` keyword argument.
     South Atlantic Anomaly,” Earth Planets Space, vol. 72, no. 1, Art. no. 1, Dec. 2020,
     doi: 10.1186/s40623-020-01252-9.
 """
-function chaos(geoaz, lat, lon, year; alt=60e3)
+function chaos(geoaz, lat::Real, lon::Real, year; alt=60e3)
     Re = 6371.2
     r = Re + alt/1000
     t = CHAOS.data_utils.dyear_to_mjd(year)  # MJD2000
@@ -243,8 +243,8 @@ end
 Return a `Vector{BField}` at each distance in `dists` in meters along the path from `tx`
 to `rx` in fractional `year`.
 
-If applying `igrf` to a single distance, it is recommended to use the `geoaz`, `lat`, `lon`
-form of [`igrf`](@ref). 
+If applying `chaos` to a single distance, it is recommended to use the `geoaz`, `lat`, `lon`
+form of [`chaos`](@ref). 
 """
 function chaos(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
     line = GeodesicLine(tx, rx)
@@ -276,6 +276,46 @@ function chaos(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
     # negate az to correct rotation direction for downward pointing v
     R = RotXZ(π, -deg2rad(geoaz))
 
+    for i in eachindex(bfields)
+        Rd = R*SVector(-s[i],e[i],-u[i])
+
+        mag = hypot(u[i], s[i], e[i])
+        bfields[i] = BField(mag*1e-9, Rd[1]/mag, Rd[2]/mag, Rd[3]/mag)
+    end
+
+    return bfields
+end
+
+"""
+    chaos(geoaz, lats, lons, year; alt=60e3)
+
+Return a `Vector{BField}` at each latitude-longitude pair formed from each element of `lats`
+and `lons` in fractional `year`.
+"""
+function chaos(geoaz, lats, lons, year; alt=60e3)
+    length(lats) == length(lons) || throw(ArgumentError("length(lats) must equal length(lons)"))
+
+    Re = 6371.2
+    r = Re + alt/1000
+    t = CHAOS.data_utils.dyear_to_mjd(year)  # MJD2000
+    
+    thetas = 90 .- lats
+    phis = lons
+
+    Br_gsm, Bt_gsm, Bp_gsm = CHAOS_MODEL.synth_values_gsm(t, r, thetas, phis)
+    Br_sm, Bt_sm, Bp_sm = CHAOS_MODEL.synth_values_sm(t, r, thetas, phis)
+    Br_t, Bt_t, Bp_t = CHAOS_MODEL.synth_values_tdep(t, r, thetas, phis)
+    Br_s, Bt_s, Bp_s = CHAOS_MODEL.synth_values_static(r, thetas, phis)
+
+    u = Br_gsm + Br_sm + Br_t + Br_s  # up
+    s = Bt_gsm + Bt_sm + Bt_t + Bt_s  # south
+    e = Bp_gsm + Bp_sm + Bp_t + Bp_s  # east
+
+    # Rotate the "use" frame to the propagation path xyz frame
+    # negate az to correct rotation direction for downward pointing v
+    R = RotXZ(π, -deg2rad(geoaz))
+
+    bfields = Vector{BField}(undef, length(lats))
     for i in eachindex(bfields)
         Rd = R*SVector(-s[i],e[i],-u[i])
 

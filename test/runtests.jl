@@ -97,6 +97,7 @@ end
 
     ranges, lats, lons = bfieldlatlons(tx, rx)
     bfields = chaos(tx, rx, 2020, ranges)
+    @test bfields == chaos(az, lats, lons, 2020)
     for i in 1:length(ranges)
         @test bfields[i] == chaos(az, lats[i], lons[i], 2020)
     end
