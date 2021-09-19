@@ -70,6 +70,8 @@ The `chaos` function uses the complete CHAOS model (internal and external source
 
 ```julia
 chaos(geoaz, lat, lon, year; alt=60e3)
+chaos(geoaz, lats, lons, year; alt=60e3)  # special form for multiple lats, lons
+chaos(tx, rx, year, dists; alt=60e3)
 ```
 
 ## Ionospheres
