@@ -11,12 +11,27 @@ const GROUND_DATA = LMPTools.GROUND_DATA
 const GROUND_LAT = GROUND_DATA["lat"]
 const GROUND_LON = GROUND_DATA["lon"]
 
+function bfieldlatlons(tx, rx)
+    dists = 0:100e3:range(tx, rx)
+    line = GeodesicLine(tx, rx)
+    
+    lats = Vector{Float64}(undef, length(dists))
+    lons = similar(lats)
+    for i in eachindex(dists)
+        for (i, d) in enumerate(dists)
+            lo, la, _ = forward(line, d)
+            lats[i] = la
+            lons[i] = lo
+        end
+    end
+    return dists, lats, lons
+end
 
 @testset "LMPTools" begin
-    # Extended functions
     tx = TRANSMITTER[:NAA]
     rx = Receiver("Boulder", 40.01, -105.244, 0.0, VerticalDipole())
 
+    # Extended functions
     gl1 = GeodesicLine(tx, rx)
     gl2 = GeodesicLine(tx.longitude, tx.latitude; lon2=rx.longitude, lat2=rx.latitude)
     for f in fieldnames(GeodesicLine)
@@ -79,6 +94,12 @@ const GROUND_LON = GROUND_DATA["lon"]
     # chaos does not match igrf, but they should be reasonably close
     bfield3 = chaos(az, tx.latitude, tx.longitude, 2020)
     @test all(isapprox(getfield(bfield3,f), getfield(bfield,f); rtol=0.1) for f in fieldnames(BField))
+
+    ranges, lats, lons = bfieldlatlons(tx, rx)
+    bfields = chaos(tx, rx, 2020, ranges)
+    for i in 1:length(ranges)
+        @test bfields[i] == chaos(az, lats[i], lons[i], 2020)
+    end
 
     # Zenith angle
 

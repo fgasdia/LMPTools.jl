@@ -250,12 +250,39 @@ function chaos(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
     line = GeodesicLine(tx, rx)
     geoaz = inverse(tx.longitude, tx.latitude, rx.longitude, rx.latitude).azi
 
-    # TODO: the Python chaosmagpy package will take multiple lats and lons at once
+    Re = 6371.2
+    r = Re + alt/1000
+    t = CHAOS.data_utils.dyear_to_mjd(year)  # MJD2000
+
     bfields = Vector{BField}(undef, length(dists))
+    thetas = Vector{Float64}(undef, length(dists))
+    phis = similar(thetas)
     for (i, d) in enumerate(dists)
         lo, la, _ = forward(line, d)
-        bfields[i] = chaos(geoaz, la, lo, year; alt=alt)
+        thetas[i] = 90 - la
+        phis[i] = lo
     end
+
+    Br_gsm, Bt_gsm, Bp_gsm = CHAOS_MODEL.synth_values_gsm(t, r, thetas, phis)
+    Br_sm, Bt_sm, Bp_sm = CHAOS_MODEL.synth_values_sm(t, r, thetas, phis)
+    Br_t, Bt_t, Bp_t = CHAOS_MODEL.synth_values_tdep(t, r, thetas, phis)
+    Br_s, Bt_s, Bp_s = CHAOS_MODEL.synth_values_static(r, thetas, phis)
+
+    u = Br_gsm + Br_sm + Br_t + Br_s  # up
+    s = Bt_gsm + Bt_sm + Bt_t + Bt_s  # south
+    e = Bp_gsm + Bp_sm + Bp_t + Bp_s  # east
+
+    # Rotate the "use" frame to the propagation path xyz frame
+    # negate az to correct rotation direction for downward pointing v
+    R = RotXZ(π, -deg2rad(geoaz))
+
+    for i in eachindex(bfields)
+        Rd = R*SVector(-s[i],e[i],-u[i])
+
+        mag = hypot(u[i], s[i], e[i])
+        bfields[i] = BField(mag*1e-9, Rd[1]/mag, Rd[2]/mag, Rd[3]/mag)
+    end
+
     return bfields
 end
 
