@@ -207,7 +207,7 @@ but this can be overridden with the `alt` keyword argument.
     South Atlantic Anomaly,” Earth Planets Space, vol. 72, no. 1, Art. no. 1, Dec. 2020,
     doi: 10.1186/s40623-020-01252-9.
 """
-function chaos(geoaz, lat::Real, lon::Real, year; alt=60e3)
+function chaos(geoaz, lat::Number, lon::Number, year; alt=60e3)
     Re = 6371.2
     r = Re + alt/1000
     t = CHAOS.data_utils.dyear_to_mjd(year)  # MJD2000
@@ -215,18 +215,8 @@ function chaos(geoaz, lat::Real, lon::Real, year; alt=60e3)
     theta = 90 - lat  # geocentric co-lat (deg)
     phi = lon  # geocentric lon (deg)
 
-    Br_gsm, Bt_gsm, Bp_gsm = CHAOS_MODEL.synth_values_gsm(t, r, theta, phi)
-    Br_sm, Bt_sm, Bp_sm = CHAOS_MODEL.synth_values_sm(t, r, theta, phi)
-    Br_t, Bt_t, Bp_t = CHAOS_MODEL.synth_values_tdep(t, r, theta, phi)
-    Br_s, Bt_s, Bp_s = CHAOS_MODEL.synth_values_static(r, theta, phi)
-
-    Br_sm, Bt_sm, Bp_sm = only(Br_sm), only(Bt_sm), only(Bp_sm)
-    Br_t, Bt_t, Bp_t = only(Br_t), only(Bt_t), only(Bp_t)
-    Br_s, Bt_s, Bp_s = only(Br_s), only(Bt_s), only(Bp_s)
-
-    u = Br_gsm + Br_sm + Br_t + Br_s  # up
-    s = Bt_gsm + Bt_sm + Bt_t + Bt_s  # south
-    e = Bp_gsm + Bp_sm + Bp_t + Bp_s  # east
+    Br, Bt, Bp = CHAOS_MODEL(t, r, theta, phi)
+    u, s, e = only(Br), only(Bt), only(Bp)
 
     # Rotate the "use" frame to the propagation path xyz frame
     # negate az to correct rotation direction for downward pointing v
@@ -250,38 +240,15 @@ function chaos(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
     line = GeodesicLine(tx, rx)
     geoaz = inverse(tx.longitude, tx.latitude, rx.longitude, rx.latitude).azi
 
-    Re = 6371.2
-    r = Re + alt/1000
-    t = CHAOS.data_utils.dyear_to_mjd(year)  # MJD2000
-
-    bfields = Vector{BField}(undef, length(dists))
-    thetas = Vector{Float64}(undef, length(dists))
-    phis = similar(thetas)
+    lats = Vector{Float64}(undef, length(dists))
+    lons = similar(lats)
     for (i, d) in enumerate(dists)
         lo, la, _ = forward(line, d)
-        thetas[i] = 90 - la
-        phis[i] = lo
+        lats[i] = la
+        lons[i] = lo
     end
 
-    Br_gsm, Bt_gsm, Bp_gsm = CHAOS_MODEL.synth_values_gsm(t, r, thetas, phis)
-    Br_sm, Bt_sm, Bp_sm = CHAOS_MODEL.synth_values_sm(t, r, thetas, phis)
-    Br_t, Bt_t, Bp_t = CHAOS_MODEL.synth_values_tdep(t, r, thetas, phis)
-    Br_s, Bt_s, Bp_s = CHAOS_MODEL.synth_values_static(r, thetas, phis)
-
-    u = Br_gsm + Br_sm + Br_t + Br_s  # up
-    s = Bt_gsm + Bt_sm + Bt_t + Bt_s  # south
-    e = Bp_gsm + Bp_sm + Bp_t + Bp_s  # east
-
-    # Rotate the "use" frame to the propagation path xyz frame
-    # negate az to correct rotation direction for downward pointing v
-    R = RotXZ(π, -deg2rad(geoaz))
-
-    for i in eachindex(bfields)
-        Rd = R*SVector(-s[i],e[i],-u[i])
-
-        mag = hypot(u[i], s[i], e[i])
-        bfields[i] = BField(mag*1e-9, Rd[1]/mag, Rd[2]/mag, Rd[3]/mag)
-    end
+    bfields = chaos(geoaz, lats, lons, year; alt)
 
     return bfields
 end
@@ -298,18 +265,11 @@ function chaos(geoaz, lats, lons, year; alt=60e3)
     Re = 6371.2
     r = Re + alt/1000
     t = CHAOS.data_utils.dyear_to_mjd(year)  # MJD2000
-    
-    thetas = 90 .- lats
-    phis = lons
 
-    Br_gsm, Bt_gsm, Bp_gsm = CHAOS_MODEL.synth_values_gsm(t, r, thetas, phis)
-    Br_sm, Bt_sm, Bp_sm = CHAOS_MODEL.synth_values_sm(t, r, thetas, phis)
-    Br_t, Bt_t, Bp_t = CHAOS_MODEL.synth_values_tdep(t, r, thetas, phis)
-    Br_s, Bt_s, Bp_s = CHAOS_MODEL.synth_values_static(r, thetas, phis)
+    theta = 90 .- lats  # geocentric co-lat (deg)
+    phi = lons  # geocentric lon (deg)
 
-    u = Br_gsm + Br_sm + Br_t + Br_s  # up
-    s = Bt_gsm + Bt_sm + Bt_t + Bt_s  # south
-    e = Bp_gsm + Bp_sm + Bp_t + Bp_s  # east
+    u, s, e = CHAOS_MODEL(t, r, theta, phi)
 
     # Rotate the "use" frame to the propagation path xyz frame
     # negate az to correct rotation direction for downward pointing v
@@ -325,6 +285,7 @@ function chaos(geoaz, lats, lons, year; alt=60e3)
 
     return bfields
 end
+
 
 ###
 # Sun position

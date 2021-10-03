@@ -96,10 +96,13 @@ end
     @test all(isapprox(getfield(bfield3,f), getfield(bfield,f); rtol=0.1) for f in fieldnames(BField))
 
     ranges, lats, lons = bfieldlatlons(tx, rx)
-    bfields = chaos(tx, rx, 2020, ranges)
-    @test bfields == chaos(az, lats, lons, 2020)
+    chaos_bfields = chaos(tx, rx, 2020, ranges)
+    igrf_bfields = igrf(tx, rx, 2020, ranges)
+
+    @test chaos_bfields == chaos(az, lats, lons, 2020)
     for i in 1:length(ranges)
-        @test bfields[i] == chaos(az, lats[i], lons[i], 2020)
+        @test chaos_bfields[i] == chaos(az, lats[i], lons[i], 2020)
+        @test all(isapprox(getfield(chaos_bfields[i],f), getfield(igrf_bfields[i],f); rtol=1) for f in fieldnames(BField))
     end
 
     # Zenith angle
