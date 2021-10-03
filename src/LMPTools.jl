@@ -34,14 +34,19 @@ export zenithangle, isday, ferguson, flatlinearterminator, smoothterminator, fou
 
 
 function __init__()
-    # Install chaosmagpy
-    Conda.add(["numpy", "scipy", "pandas", "cython", "cartopy", "matplotlib", "h5py"])
+    cp = try
+        pyimport("chaosmagpy")
+    catch
+        # Install chaosmagpy
+        Conda.add(["numpy", "scipy", "pandas", "cython", "cartopy", "matplotlib", "h5py"])
 
-    Conda.pip_interop(true)
-    Conda.pip("install", ["cdflib", "hdf5storage", "lxml"])
-    Conda.pip("install", "chaosmagpy")
+        Conda.pip_interop(true)
+        Conda.pip("install", ["cdflib", "hdf5storage", "lxml"])
+        Conda.pip("install", "chaosmagpy")
 
-    cp = pyimport("chaosmagpy")
+        pyimport("chaosmagpy")
+    end
+
     model = cp.load_CHAOS_matfile(joinpath(@__DIR__, "..", "CHAOS-7.8.mat"))
     copy!(CHAOS, cp)
     copy!(CHAOS_MODEL, model)
