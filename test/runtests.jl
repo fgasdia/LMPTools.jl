@@ -1,11 +1,8 @@
 using Test, LMPTools
 using Dates
-using PyCall
 using GeographicLib
 using LongwaveModePropagator
 const LMP = LongwaveModePropagator
-
-include("utils.jl")
 
 const GROUND_DATA = LMPTools.GROUND_DATA
 const GROUND_LAT = GROUND_DATA["lat"]
