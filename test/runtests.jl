@@ -105,6 +105,11 @@ end
         @test all(isapprox(getfield(chaos_bfields[i],f), getfield(igrf_bfields[i],f); rtol=1) for f in fieldnames(BField))
     end
 
+    # Try loading a different CHAOS mat file
+    load_CHAOS_matfile(joinpath(LMPTools.project_path("data"), "CHAOS-7.8.mat"))
+    bfield4 = chaos(az, tx.latitude, tx.longitude, 2020)
+    @test all(isapprox(getfield(bfield4,f), getfield(bfield,f); rtol=0.1) for f in fieldnames(BField))
+
     # Zenith angle
 
     dt = DateTime(2021, 2, 1, 12, 45)

@@ -76,6 +76,8 @@ chaos(geoaz, lats, lons, year; alt=60e3)  # special form for multiple lats, lons
 chaos(tx, rx, year, dists; alt=60e3)
 ```
 
+By default this package uses CHAOS-7.9. Alternate model coefficient `.mat` files can be loaded using `load_CHAOS_matfile`.
+
 ## Ionospheres
 
 Although not directly the ionosphere, the solar zenith angle is frequently needed for basic ionosphere models. This package provides

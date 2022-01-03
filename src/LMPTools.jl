@@ -29,9 +29,8 @@ const CHAOS_MODEL = PyNULL()
 export TRANSMITTER
 export range
 export get_ground, get_groundcode, get_epsilon, get_sigma, groundsegments
-export igrf, chaos
+export igrf, chaos, load_CHAOS_matfile
 export zenithangle, isday, ferguson, flatlinearterminator, smoothterminator, fourierperturbation
-
 
 function __init__()
     cp = try
@@ -47,9 +46,42 @@ function __init__()
         pyimport("chaosmagpy")
     end
 
-    model = cp.load_CHAOS_matfile(joinpath(@__DIR__, "..", "CHAOS-7.8.mat"))
+    chaosfile = newestchaos()
+    @info "Loading $chaosfile"
+
+    model = cp.load_CHAOS_matfile(joinpath(project_path("data"), chaosfile))
     copy!(CHAOS, cp)
     copy!(CHAOS_MODEL, model)
+end
+
+function newestchaos()
+    datafiles = readdir(project_path("data"); sort=true)
+    newestfile = ""
+    for f in datafiles
+        if occursin("CHAOS", f) && f > newestfile
+            newestfile = f
+        end
+    end
+    return newestfile
+end
+
+"""
+    load_CHAOS_matfile(file)
+
+Load a CHAOS model coefficient matfile `file` for use by [`chaos`](@ref).
+
+These files can be found at https://www.spacecenter.dk/files/magnetic-models/CHAOS-7/.
+
+By default, LMPTools loads $(newestchaos()). 
+"""
+function load_CHAOS_matfile(file)
+    cp = pyimport("chaosmagpy")
+    @info "Loading $file"
+    model = cp.load_CHAOS_matfile(joinpath(project_path("data"), file))
+    copy!(CHAOS, cp)
+    copy!(CHAOS_MODEL, model)
+
+    return nothing
 end
 
 ###
