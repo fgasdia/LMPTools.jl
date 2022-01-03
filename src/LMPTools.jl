@@ -68,7 +68,7 @@ end
 """
     load_CHAOS_matfile(file)
 
-Load a CHAOS model coefficient matfile `file` for use by [`chaos`](@ref).
+Load a CHAOS model coefficient MATLAB `.mat` file for use by [`chaos`](@ref).
 
 These files can be found at https://www.spacecenter.dk/files/magnetic-models/CHAOS-7/.
 
