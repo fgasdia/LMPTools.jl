@@ -1,7 +1,7 @@
 name = "LMPTools"
 uuid = "9da4b389-a4e8-40b7-9cd7-952b7f4c5d81"
 authors = ["fgasdia <17058025+fgasdia@users.noreply.github.com>"]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 Conda = "8f4d0f93-b110-5947-807f-2305c1781a2d"
@@ -23,6 +23,7 @@ PyCall = "1"
 Rotations = "1"
 SatelliteToolbox = "0.8,0.9"
 StaticArrays = "1"
+julia = "1.7"
 
 [extras]
 GeographicLib = "c96ba436-a6fe-11e9-10ab-c9f3919c93d1"
