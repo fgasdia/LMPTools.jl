@@ -1,11 +1,8 @@
 using Test, LMPTools
 using Dates
-using PyCall
 using GeographicLib
 using LongwaveModePropagator
 const LMP = LongwaveModePropagator
-
-include("utils.jl")
 
 const GROUND_DATA = LMPTools.GROUND_DATA
 const GROUND_LAT = GROUND_DATA["lat"]
@@ -104,6 +101,11 @@ end
         @test chaos_bfields[i] == chaos(az, lats[i], lons[i], 2020)
         @test all(isapprox(getfield(chaos_bfields[i],f), getfield(igrf_bfields[i],f); rtol=1) for f in fieldnames(BField))
     end
+
+    # Try loading a different CHAOS mat file
+    load_CHAOS_matfile(joinpath(LMPTools.project_path("data"), "CHAOS-7.8.mat"))
+    bfield4 = chaos(az, tx.latitude, tx.longitude, 2020)
+    @test all(isapprox(getfield(bfield4,f), getfield(bfield,f); rtol=0.1) for f in fieldnames(BField))
 
     # Zenith angle
 
