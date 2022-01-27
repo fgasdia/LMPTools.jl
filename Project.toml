@@ -17,7 +17,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 [compat]
 Conda = "1"
 GeographicLib = "0.4"
-HDF5 = "0.15"
+HDF5 = "0.15, 0.16"
 LongwaveModePropagator = "0.1,0.2,0.3"
 PyCall = "1"
 Rotations = "1"
