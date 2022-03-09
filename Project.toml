@@ -1,7 +1,7 @@
 authors = ["fgasdia <17058025+fgasdia@users.noreply.github.com>"]
 name = "LMPTools"
 uuid = "9da4b389-a4e8-40b7-9cd7-952b7f4c5d81"
-version = "0.2.1"
+version = "0.2.2"
 
 [compat]
 Conda = "1"
