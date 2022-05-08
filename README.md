@@ -1,5 +1,7 @@
 # LMPTools.jl
 
+[![DOI](https://zenodo.org/badge/343526561.svg)](https://zenodo.org/badge/latestdoi/343526561)
+
 **Convenience and utility functions for [LongwaveModePropagator.jl](https://github.com/fgasdia/LongwaveModePropagator.jl) and other propagation models for the Earth-ionosphere waveguide.**
 
 A brief summary of the exported functions are below, but use Julia's built-in help feature `?` for more information on using each of these functions.
