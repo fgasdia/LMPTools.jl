@@ -34,7 +34,7 @@ Although it's not exported, this package also extends `GeographicLib.GeodesicLin
 
 [LongwaveModePropagator.jl](https://github.com/fgasdia/LongwaveModePropagator.jl) exports `GROUND`, which is a dictionary of standard combinations of conductivity and relative permittivity.
 
-This package includes a global ground conductivity map (possibly the same one used by [LWPC](https://apps.dtic.mil/sti/citations/ADA350375), but admittedly the exact provenance of this file is unknown) and functions which can be used to obtain the ground conductivity, relative permittivity, or `GROUND` index code.
+This package includes a global ground conductivity map and functions which can be used to obtain the ground conductivity, relative permittivity, or `GROUND` index code. The map is the same one used by [LWPC](https://apps.dtic.mil/sti/citations/ADA350375), which is based on [(Morgan, 1986)](https://apps.dtic.mil/sti/citations/AD0675771). 
 
 ```julia
 get_groundcode(lat, lon)
