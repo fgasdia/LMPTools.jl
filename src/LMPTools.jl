@@ -140,6 +140,17 @@ only:
     * [`get_groundcode`](@ref)
     * [`get_sigma`](@ref)
     * [`get_epsilon`](@ref)
+
+# References
+
+[Ferguson1998]: J. A. Ferguson, “Computer programs for assessment of long-wavelength radio
+    communications, version 2.0: User’s guide and source files,” Space and Naval Warfare
+    Systems Center, San Diego, CA, Technical Document 3030, May 1998. Accessed: Feb. 14, 2017.
+    [Online]. Available: http://www.dtic.mil/docs/citations/ADA350375
+
+[Morgan1968]: R. R. Morgan, “World-wide VLF effective-conductivity map,” Westinghouse
+    Electric Corporation, Westinghouse Electric Corporation Report WEST-80133F-1, Jan. 1968.
+    Accessed: Dec. 14, 2017. [Online]. Available: http://www.dtic.mil/docs/citations/AD0675771
 """
 function get_ground(param, lat, lon)
     latidx = searchsortednearest(GROUND_DATA["lat"], lat)
@@ -249,11 +260,17 @@ Return a `BField` from CHAOS-7 using internal and external sources for position
 By default, the magnetic field at an altitude of 60,000 meters is returned,
 but this can be overridden with the `alt` keyword argument.
 
+See also: [`load_CHAOS_matfile`](@ref)
+
 # References
 
-[^1]: C. C. Finlay et al., “The CHAOS-7 geomagnetic field model and observed changes in the
-    South Atlantic Anomaly,” Earth Planets Space, vol. 72, no. 1, Art. no. 1, Dec. 2020,
-    doi: 10.1186/s40623-020-01252-9.
+[Finlay2019]: Finlay, C.C., Kloss, C., Olsen, N., Hammer, M. and Toeffner-Clausen, L.,
+    (2019) DTU Candidate models for IGRF-13. Technical Note submitted to IGRF-13 task force,
+    1st October 2019
+[Finlay2020]: Finlay, C.C., Kloss, C., Olsen, N., Hammer, M. Toeffner-Clausen, L.,
+    Grayver, A and Kuvshinov, A. (2020), The CHAOS-7 geomagnetic field model and observed
+    changes in the South Atlantic Anomaly, Earth Planets and Space 72,
+    doi:10.1186/s40623-020-01252-9
 """
 function chaos(geoaz, lat::Number, lon::Number, year; alt=60e3)
     Re = 6371.2
@@ -283,18 +300,6 @@ to `rx` in fractional `year`.
 
 If applying `chaos` to a single distance, it is recommended to use the `geoaz`, `lat`, `lon`
 form of [`chaos`](@ref).
-
-See also: [`load_CHAOS_matfile`](@ref)
-
-# References
-
-[Finlay2019]: Finlay, C.C., Kloss, C., Olsen, N., Hammer, M. and Toeffner-Clausen, L.,
-    (2019) DTU Candidate models for IGRF-13. Technical Note submitted to IGRF-13 task force,
-    1st October 2019
-[Finlay2020]: Finlay, C.C., Kloss, C., Olsen, N., Hammer, M. Toeffner-Clausen, L.,
-    Grayver, A and Kuvshinov, A. (2020), The CHAOS-7 geomagnetic field model and observed
-    changes in the South Atlantic Anomaly, Earth Planets and Space 72,
-    doi:10.1186/s40623-020-01252-9
 """
 function chaos(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
     line = GeodesicLine(tx, rx)
