@@ -14,7 +14,7 @@ A dictionary of some VLF transmitters as `Transmitter` types can be obtained:
 TRANSMITTER
 ```
 
-Note that only each transmitter latitude, longitude, and frequency is correct. The power and altitude use the default values for LongwaveModePropagator's `Transmitter` type.
+Note that only each transmitter latitude, longitude, and frequency is correct. The power for each is 1000 W. 
 
 ---
 
@@ -119,3 +119,59 @@ fourierperturbation(sza, coeff; a=deg2rad(45)/2)
 ```
 
 returns a "perturbation" based on a Fourier series which can be used to model more complicated h′, β exponential ionospheres.
+
+## Example with LongwaveModePropagator.jl
+
+Here is an example using several LMPTools functions with LongwaveModePropagator.jl to model the electric field amplitude and phase at a receiver.
+
+- The propagation path is segmented using `groundsegments`.
+- The ionosphere is defined in h′ and β using Fourier perturbations (`fourierperturbation`) to the Ferguson model (`ferguson`).
+- Earth's magnetic field comes from the `igrf` model.
+
+```julia
+using Dates, LongwaveModePropagator
+using LongwaveModePropagator: QE, ME
+using LMPTools
+using GeographicLib  # using Pkg; Pkg.add("https://github.com/anowacki/GeographicLib.jl")
+
+dt = DateTime(2021, 2, 1)
+
+# Propagation path from NAA in Maine to Boulder, Colorado.
+tx = TRANSMITTER[:NAA]
+rx = Receiver("Boulder", 40.01, -105.244, 0.0, VerticalDipole())
+
+# For efficiency, precompute the geographic azimuth between the transmitter and receiver.
+geoaz = inverse(tx.longitude, tx.latitude, rx.longitude, rx.latitude).azi
+
+# and precompute a line between the transmitter and receiver.
+line = GeodesicLine(tx, rx)
+
+# Fourier perturbation coefficients
+hcoeff = (1.345, 0.668, -0.177, -0.248, 0.096)
+bcoeff = (0.01, 0.005, -0.002, 0.01, 0.015)
+
+# Use `groundsegments` from LMPTools to divide the propagation path into segments
+grounds, dists = groundsegments(tx, rx; resolution=20e3)
+
+# Preallocate a vector of `HomogeneousWaveguide` to construct a `SegmentedWaveguide`
+wvgs = Vector{HomogeneousWaveguide{Species}}(undef, length(dists))
+for i in eachindex(dists)
+    dist = dists[i]
+    wpt = forward(line, dist)
+
+    bfield = igrf(geoaz, wpt.lat, wpt.lon, year(dt))
+
+    sza = zenithangle(wpt.lat, wpt.lon, dt)
+    h, b = ferguson(wpt.lat, sza, dt)
+    h += fourierperturbation(sza, hcoeff)
+    b += fourierperturbation(sza, bcoeff)
+
+    species = Species(QE, ME, z->waitprofile(z, h, b), electroncollisionfrequency)
+
+    wvgs[i] = HomogeneousWaveguide(bfield, species, grounds[i], dist)
+end
+wvg = SegmentedWaveguide(wvgs)
+
+gs = GroundSampler(range(tx, rx), Fields.Ez)
+E, amplitude, phase = propagate(wvg, tx, gs)  # field at the receiver
+```

@@ -1,12 +1,22 @@
 using Dates, Printf
-using Plots
+using Plots, CSV
 using LongwaveModePropagator
+import LongwaveModePropagator as LMP
+using GeographicLib
 using LMPTools
+
+include(joinpath("..", "test", "utils.jl"))
+
+const GROUND_DATA = LMPTools.GROUND_DATA
+const LAT = GROUND_DATA["lat"]
+const LON = GROUND_DATA["lon"]
 
 # Ground
 
 tx = TRANSMITTER[:NAA]
 rx = Receiver("Boulder", 40.01, -105.244, 0.0, VerticalDipole())
+distances = 0:100e3:range(tx, rx)
+az = inverse(tx.longitude, tx.latitude, rx.longitude, rx.latitude).azi
 
 sigmas = [get_sigma(y, x) for y in LAT, x in LON]
 heatmap(LON, LAT, sigmas, clims=(0, 0.11))
@@ -23,8 +33,7 @@ scatter!(getfield.(pts, :lon), getfield.(pts, :lat))
 # Compare to LWPC
 tx = Transmitter{VerticalDipole}("fdtdnaa", 44.646, -67.281, VerticalDipole(), Frequency(24e3), 100e3)
 rx = Receiver("Boulder", 40.01, -105.244, 0.0, VerticalDipole())
-grounds, distances = groundsegments(tx.latitude, tx.longitude, rx.latitude, rx.longitude;
-    require_permittivity_change=false)
+grounds, distances = groundsegments(tx, rx; require_permittivity_change=false)
 bfields = igrf(tx, rx, 2020, distances)
 
 species = Species(LMP.QE, LMP.ME, z->waitprofile(z, 82, 0.55), electroncollisionfrequency)
@@ -49,63 +58,6 @@ heatmap(lons, lats, szas,
         color=cgrad(:starrynight, [50, 70, 80, 85, 90, 95, 100, 110, 130]/180, rev=true), clims=(0, 180))
 
 
-
-function gpmap(file, lats::AbstractRange, lons::AbstractRange, data)
-    size(data) == (length(lats), length(lons)) || throw(ArgumentError("data not compatible with lats, lons"))
-    issorted(lons) && issorted(lats) || throw(ArgumentError("lats and lons must be sorted"))
-
-    δlat = step(lats)/2
-    δlon = step(lons)/2
-
-    open(file, "w") do f
-        for j in eachindex(lons)
-            for i in eachindex(lats)
-                
-                str = @sprintf("%f, %f, %f\n", lons[j]-δlon, lats[i]-δlat, szas[i,j])
-                write(f, str)
-                str = @sprintf("%f, %f, %f\n", lons[j]-δlon, lats[i]+δlat, szas[i,j])
-                write(f, str)
-                str = @sprintf("%f, %f, %f\n", lons[j]+δlon, lats[i]+δlat, szas[i,j])
-                write(f, str)
-                str = @sprintf("%f, %f, %f\n", lons[j]+δlon, lats[i]-δlat, szas[i,j])
-                write(f, str)
-                
-                write(f, "\n")
-            end
-        end
-    end
-end
-
-dt = DateTime(2021, 2, 1)
-lats = 35:60
-lons = -110:-75
-szas = [zenithangle(la, lo, dt) for la in lats, lo in lons]
-gpmap("szas.csv", lats, lons, szas)
-
-
-function gppm3d(file, lats, lons, data)
-    lon=vec([lo for la in lats, lo in lons])
-    lat=vec([la for la in lats, lo in lons])
-    sza=vec(szas)
-
-    open(file, "w") do f
-        for j in eachindex(lons)
-            for i in eachindex(lats)
-                str = @sprintf("%f, %f, %f\n", lons[j], lats[i], szas[i,j])
-                write(f, str)
-            end
-            write(f, "\n")
-        end
-    end
-end
-
-dt = DateTime(2021, 2, 1)
-lats = 40:65
-lons = -145:-60
-szas = [zenithangle(la, lo, dt) for la in lats, lo in lons]
-gppm3d("szas_3col.csv", lats, lons, szas)
-
-
 # Ionospheres
 
 dt = DateTime(2021, 2, 1)
@@ -114,12 +66,6 @@ lons = -160:-60
 x = [ferguson(la, zenithangle(la, lo, dt), dt) for la in lats, lo in lons]
 heatmap(lons, lats, getindex.(x,1), color=:amp, clims=(68, 90))
 
-dt = DateTime(2020, 3, 1, 2)
-szas = [zenithangle(la, lo, dt) for la in lats, lo in lons]
-
-heatmap(lons, lats, szas,
-        color=cgrad(:starrynight, [50, 70, 80, 85, 90, 95, 100, 110, 130]/180, rev=true), clims=(0, 180))
-
 hprimes, betas = flatlinearterminator(szas)
 heatmap(lons, lats, hprimes, color=:amp, clims=(68, 90))
 heatmap(lons, lats, betas, color=:tempo, clims=(0.2, 0.6))
@@ -127,3 +73,51 @@ heatmap(lons, lats, betas, color=:tempo, clims=(0.2, 0.6))
 ionos = smoothterminator.(szas)
 heatmap(lons, lats, getindex.(ionos,1), color=:amp, clims=(68, 90))
 heatmap(lons, lats, getindex.(ionos,2), color=:tempo, clims=(0.2, 0.6))
+
+# Example
+
+using Dates, LongwaveModePropagator
+using LongwaveModePropagator: QE, ME
+using LMPTools
+using GeographicLib  # using Pkg; Pkg.add("https://github.com/anowacki/GeographicLib.jl")
+
+dt = DateTime(2021, 2, 1)
+
+# Propagation path from NAA in Maine to Boulder, Colorado.
+tx = TRANSMITTER[:NAA]
+rx = Receiver("Boulder", 40.01, -105.244, 0.0, VerticalDipole())
+
+# For efficiency, precompute the geographic azimuth between the transmitter and receiver.
+geoaz = inverse(tx.longitude, tx.latitude, rx.longitude, rx.latitude).azi
+
+# and precompute a line between the transmitter and receiver.
+line = GeodesicLine(tx, rx)
+
+# Fourier perturbation coefficients
+hcoeff = (1.345, 0.668, -0.177, -0.248, 0.096)
+bcoeff = (0.01, 0.005, -0.002, 0.01, 0.015)
+
+# Use `groundsegments` from LMPTools to divide the propagation path into segments
+grounds, dists = groundsegments(tx, rx; resolution=20e3)
+
+# Preallocate a vector of `HomogeneousWaveguide` to construct a `SegmentedWaveguide`
+wvgs = Vector{HomogeneousWaveguide{Species}}(undef, length(dists))
+for i in eachindex(dists)
+    dist = dists[i]
+    wpt = forward(line, dist)
+
+    bfield = igrf(geoaz, wpt.lat, wpt.lon, year(dt))
+
+    sza = zenithangle(wpt.lat, wpt.lon, dt)
+    h, b = ferguson(wpt.lat, sza, dt)
+    h += fourierperturbation(sza, hcoeff)
+    b += fourierperturbation(sza, bcoeff)
+
+    species = Species(QE, ME, z->waitprofile(z, h, b), electroncollisionfrequency)
+
+    wvgs[i] = HomogeneousWaveguide(bfield, species, grounds[i], dist)
+end
+wvg = SegmentedWaveguide(wvgs)
+
+gs = GroundSampler(range(tx, rx), Fields.Ez)
+E, amplitude, phase = propagate(wvg, tx, gs)  # field at the receiver

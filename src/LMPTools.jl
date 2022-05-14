@@ -153,7 +153,6 @@ conductivity that has a small influence on the electric field in the EIWG but co
 cost of additional (potentially nearly identical) segments in the waveguide model.
 """
 function groundsegments(tx::Transmitter, rx::Receiver; resolution=20e3, require_permittivity_change=false)
-
     line = GeodesicLine(tx, rx)
     pts = waypoints(line, dist=resolution)
 
