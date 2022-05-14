@@ -56,13 +56,21 @@ end
 
 function newestchaos()
     datafiles = readdir(project_path("data"); sort=true)
-    newestfile = ""
-    for f in datafiles
-        if occursin("CHAOS", f) && f > newestfile
-            newestfile = f
+    pattern = r"CHAOS-([0-9]+\.?[0-9]*)\.mat"
+
+    newestidx = 1
+    newestversion = v"0.0"
+    for (i, f) in enumerate(datafiles)
+        m = match(pattern, f)
+        isnothing(m) && continue
+        versionnumber = parse(VersionNumber, m[1])
+
+        if versionnumber > newestversion
+            newestversion = versionnumber
+            newestidx = i
         end
     end
-    return newestfile
+    return datafiles[newestidx]
 end
 
 """
@@ -72,7 +80,11 @@ Load a CHAOS model coefficient MATLAB `.mat` file for use by [`chaos`](@ref).
 
 These files can be found at https://www.spacecenter.dk/files/magnetic-models/CHAOS-7/.
 
-By default, LMPTools loads $(newestchaos()). 
+By default, LMPTools loads $(newestchaos()).
+
+The model coefficients are loaded by the Python package
+[chaosmagpy](https://pypi.org/project/chaosmagpy/), which is under MIT license with
+Copyright (c) 2022 Clemens Kloss.
 """
 function load_CHAOS_matfile(file)
     cp = pyimport("chaosmagpy")
@@ -270,7 +282,19 @@ Return a `Vector{BField}` at each distance in `dists` in meters along the path f
 to `rx` in fractional `year`.
 
 If applying `chaos` to a single distance, it is recommended to use the `geoaz`, `lat`, `lon`
-form of [`chaos`](@ref). 
+form of [`chaos`](@ref).
+
+See also: [`load_CHAOS_matfile`](@ref)
+
+# References
+
+[Finlay2019]: Finlay, C.C., Kloss, C., Olsen, N., Hammer, M. and Toeffner-Clausen, L.,
+    (2019) DTU Candidate models for IGRF-13. Technical Note submitted to IGRF-13 task force,
+    1st October 2019
+[Finlay2020]: Finlay, C.C., Kloss, C., Olsen, N., Hammer, M. Toeffner-Clausen, L.,
+    Grayver, A and Kuvshinov, A. (2020), The CHAOS-7 geomagnetic field model and observed
+    changes in the South Atlantic Anomaly, Earth Planets and Space 72,
+    doi:10.1186/s40623-020-01252-9
 """
 function chaos(tx::Transmitter, rx::Receiver, year, dists; alt=60e3)
     line = GeodesicLine(tx, rx)
