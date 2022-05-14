@@ -107,6 +107,8 @@ end
     bfield4 = chaos(az, tx.latitude, tx.longitude, 2020)
     @test all(isapprox(getfield(bfield4,f), getfield(bfield,f); rtol=0.1) for f in fieldnames(BField))
 
+    @test LMPTools.newestchaos() == "CHAOS-7.10.mat"
+
     # Zenith angle
 
     dt = DateTime(2021, 2, 1, 12, 45)
