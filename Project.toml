@@ -1,13 +1,13 @@
 authors = ["fgasdia <17058025+fgasdia@users.noreply.github.com>"]
 name = "LMPTools"
 uuid = "9da4b389-a4e8-40b7-9cd7-952b7f4c5d81"
-version = "0.2.2"
+version = "0.2.3"
 
 [compat]
 Conda = "1"
 GeographicLib = "0.4"
 HDF5 = "0.15, 0.16"
-LongwaveModePropagator = "0.1,0.2,0.3"
+LongwaveModePropagator = "0.1,0.2,0.3,0.4"
 PyCall = "1"
 Rotations = "1"
 SatelliteToolbox = "0.8,0.9"
