@@ -107,7 +107,10 @@ end
     bfield4 = chaos(az, tx.latitude, tx.longitude, 2020)
     @test all(isapprox(getfield(bfield4,f), getfield(bfield,f); rtol=0.1) for f in fieldnames(BField))
 
-    @test LMPTools.newestchaos() == "CHAOS-7.10.mat"
+    load_CHAOS_matfile(joinpath(LMPTools.project_path("data"), "CHAOS-7.11.mat"))
+    bfield6 = chaos(az, tx.latitude, tx.longitude, 2020)
+    @test all(!isequal(getfield(bfield4,f), getfield(bfield6,f)) for f in fieldnames(BField))
+    @test LMPTools.newestchaos() == "CHAOS-7.11.mat"
 
     # Zenith angle
 
