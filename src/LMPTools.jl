@@ -89,9 +89,39 @@ Copyright (c) 2022 Clemens Kloss.
 function load_CHAOS_matfile(file)
     cp = pyimport("chaosmagpy")
     @info "Loading $file"
-    model = cp.load_CHAOS_matfile(joinpath(project_path("data"), file))
+    model = cp.load_CHAOS_matfile(file)
     copy!(CHAOS, cp)
     copy!(CHAOS_MODEL, model)
+
+    return nothing
+end
+
+"""
+    load_CHAOS_matfile(version::VersionNumber)
+
+Load CHAOS model `version`.
+
+Only versions `v7.8` through `v7.11` are provided with this package. Users can download
+other versions from https://www.spacecenter.dk/files/magnetic-models/CHAOS-7/ onto their
+local machine and specify the file path to this function instead.
+
+# Example
+```julia
+load_CHAOS_matfile(v"7.11")
+```
+"""
+function load_CHAOS_matfile(version::VersionNumber)
+    if version == v"7.8"
+        load_CHAOS_matfile(joinpath(project_path("data"), "CHAOS-7.8.mat"))
+    elseif version == v"7.9"
+        load_CHAOS_matfile(joinpath(project_path("data"), "CHAOS-7.9.mat"))
+    elseif version == v"7.10"
+        load_CHAOS_matfile(joinpath(project_path("data"), "CHAOS-7.10.mat"))
+    elseif version == v"7.11"
+        load_CHAOS_matfile(joinpath(project_path("data"), "CHAOS-7.11.mat"))
+    else
+        @warn "CHAOS $version not found. Model coefficients can be found here: https://www.spacecenter.dk/files/magnetic-models/CHAOS-7/"
+    end
 
     return nothing
 end
