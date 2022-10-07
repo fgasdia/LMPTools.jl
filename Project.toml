@@ -1,18 +1,7 @@
-authors = ["fgasdia <17058025+fgasdia@users.noreply.github.com>"]
 name = "LMPTools"
 uuid = "9da4b389-a4e8-40b7-9cd7-952b7f4c5d81"
+authors = ["fgasdia <17058025+fgasdia@users.noreply.github.com>"]
 version = "0.2.4"
-
-[compat]
-Conda = "1"
-GeographicLib = "0.4"
-HDF5 = "0.16"
-LongwaveModePropagator = "0.2,0.3"
-PyCall = "1"
-Rotations = "1"
-SatelliteToolbox = "0.8,0.9"
-StaticArrays = "1"
-julia = "1.7"
 
 [deps]
 Conda = "8f4d0f93-b110-5947-807f-2305c1781a2d"
@@ -24,6 +13,16 @@ PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 Rotations = "6038ab10-8711-5258-84ad-4b1120ba62dc"
 SatelliteToolbox = "6ac157d9-b43d-51bb-8fab-48bf53814f4a"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+
+[compat]
+GeographicLib = "0.4"
+HDF5 = "0.16"
+LongwaveModePropagator = "0.2,0.3"
+PyCall = "1"
+Rotations = "1"
+SatelliteToolbox = "0.8,0.9"
+StaticArrays = "1"
+julia = "1.7"
 
 [extras]
 CPUSummary = "2a0fbf3d-bb9c-48f3-b0a9-814d99fd7ab9"
