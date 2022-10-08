@@ -37,10 +37,10 @@ function __init__()
         pyimport("chaosmagpy")
     catch
         # Install chaosmagpy
-        Conda.add(["numpy", "scipy", "pandas", "cython", "cartopy", "matplotlib", "h5py"])
+        Conda.add(["numpy", "scipy", "pandas", "cython", "matplotlib", "h5py"])
 
         Conda.pip_interop(true)
-        Conda.pip("install", ["cdflib", "hdf5storage", "lxml"])
+        Conda.pip("install", ["cdflib", "hdf5storage"])
         Conda.pip("install", "chaosmagpy")
 
         pyimport("chaosmagpy")
