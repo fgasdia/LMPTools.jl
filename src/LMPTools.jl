@@ -37,7 +37,7 @@ function __init__()
         pyimport("chaosmagpy")
     catch
         # Install chaosmagpy
-        Conda.add(["numpy", "scipy", "pandas", "cython", "matplotlib", "h5py=3.4.0"],
+        Conda.add(["numpy", "scipy", "pandas", "cython", "matplotlib"],
             Conda.ROOTENV)
 
         Conda.pip_interop(true, Conda.ROOTENV)
