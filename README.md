@@ -78,7 +78,7 @@ chaos(geoaz, lats, lons, year; alt=60e3)  # special form for multiple lats, lons
 chaos(tx, rx, year, dists; alt=60e3)
 ```
 
-By default this package uses CHAOS-7.9. Alternate model coefficient MATLAB `.mat` files can be loaded using the function `load_CHAOS_matfile`. Subsequent calls to `chaos` will use the most recently loaded model coefficients.
+By default this package uses CHAOS-7.11. Alternate model coefficient MATLAB `.mat` files can be loaded using the function `load_CHAOS_matfile`. Subsequent calls to `chaos` will use the most recently loaded model coefficients.
 
 ## Ionospheres
 
