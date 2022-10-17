@@ -15,6 +15,7 @@ SatelliteToolbox = "6ac157d9-b43d-51bb-8fab-48bf53814f4a"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
+Conda = "1"
 GeographicLib = "0.4"
 HDF5 = "0.16"
 LongwaveModePropagator = "0.2,0.3"
