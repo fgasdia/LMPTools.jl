@@ -8,7 +8,7 @@ module LMPTools
 using PyCall, Conda
 using Rotations, StaticArrays
 using HDF5, Dates
-using GeographicLib, SatelliteToolbox
+using GeographicLib, SatelliteToolboxGeomagneticField
 using LongwaveModePropagator
 
 project_path(parts...) = normpath(@__DIR__, "..", parts...)
@@ -250,12 +250,13 @@ By default, the magnetic field at an altitude of 60,000 meters is returned,
 but this can be overridden with the `alt` keyword argument.
 """
 function igrf(geoaz, lat, lon, year; alt=60e3)
-    n, e, v, t = igrf13syn(0, year, 1, alt/1000, 90-lat, mod(lon, 360))  # in nT!, @60km altitude
+    n, e, u = igrfd(year, alt, lat, lon, Val(:geodetic))
+    t = hypot(n, e, u)
 
-    # Rotate the nev frame to the propagation path xyz frame
+    # Rotate the neu frame to the propagation path xyz frame
     # negate az to correct rotation direction for downward pointing v
     R = RotXZ(π, -deg2rad(geoaz))
-    Rd = R*SVector(n,e,v)
+    Rd = R*SVector(n, e, u)
 
     return BField(t*1e-9, Rd[1]/t, Rd[2]/t, Rd[3]/t)
 end
