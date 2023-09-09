@@ -1,7 +1,7 @@
 name = "LMPTools"
 uuid = "9da4b389-a4e8-40b7-9cd7-952b7f4c5d81"
 authors = ["fgasdia <17058025+fgasdia@users.noreply.github.com>"]
-version = "0.2.3"
+version = "0.2.4"
 
 [deps]
 Conda = "8f4d0f93-b110-5947-807f-2305c1781a2d"
@@ -17,7 +17,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 [compat]
 Conda = "1.7"
 GeographicLib = "0.4"
-HDF5 = "0.16"
+HDF5 = "0.16 - 0.17"
 LongwaveModePropagator = "0.2,0.3"
 PyCall = "1"
 Rotations = "1"
@@ -27,10 +27,7 @@ julia = "1.7"
 
 [extras]
 CPUSummary = "2a0fbf3d-bb9c-48f3-b0a9-814d99fd7ab9"
-Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
-GeographicLib = "c96ba436-a6fe-11e9-10ab-c9f3919c93d1"
-LongwaveModePropagator = "38c6559a-e0a7-48c6-827d-3f02e2d19cec"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Dates", "Test", "LongwaveModePropagator", "GeographicLib"]
+test = ["Test"]
