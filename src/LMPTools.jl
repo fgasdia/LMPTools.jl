@@ -5,6 +5,7 @@ Convenience and utility functions for LongwaveModePropagator.jl.
 """
 module LMPTools
 
+using LinearAlgebra
 using PyCall, Conda
 using Rotations, StaticArrays
 using HDF5, Dates
@@ -244,20 +245,22 @@ end
 """
     igrf(geoaz, lat, lon, year; alt=60e3)
 
-Return a `BField` from IGRF-13 for position (`lat`, `lon`)°  at fractional
+Return a `BField` in Tesla from IGRF-13 for position (`lat`, `lon`)°  at fractional
 `year`. `geoaz`° is the geodetic azimuth of the path from transmitter to receiver.
 By default, the magnetic field at an altitude of 60,000 meters is returned,
 but this can be overridden with the `alt` keyword argument.
 """
 function igrf(geoaz, lat, lon, year; alt=60e3)
-    n, e, u = igrfd(year, alt, lat, lon, Val(:geodetic))
-    t = hypot(n, e, u)
+    # +N/-S; +E/-W; +D/-U
+    ned = igrfd(year, alt, lat, mod(lon, 180)-180, Val(:geodetic))  # in nT!
+    t = norm(ned)
 
     # Rotate the neu frame to the propagation path xyz frame
     # negate az to correct rotation direction for downward pointing v
     R = RotXZ(π, -deg2rad(geoaz))
-    Rd = R*SVector(n, e, u)
+    Rd = R*ned
 
+    # Convert to Tesla
     return BField(t*1e-9, Rd[1]/t, Rd[2]/t, Rd[3]/t)
 end
 
