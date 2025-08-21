@@ -80,7 +80,8 @@ end
 
 Load a CHAOS model coefficient MATLAB `.mat` file for use by [`chaos`](@ref).
 
-These files can be found at https://www.spacecenter.dk/files/magnetic-models/CHAOS-7/.
+These files can be found at https://www.spacecenter.dk/files/magnetic-models/CHAOS-7/ or
+https://www.spacecenter.dk/files/magnetic-models/CHAOS-8/.
 
 By default, LMPTools loads $(newestchaos()).
 
@@ -103,13 +104,14 @@ end
 
 Load CHAOS model `version`.
 
-Only versions `v7.8` through `v7.11` are provided with this package. Users can download
-other versions from https://www.spacecenter.dk/files/magnetic-models/CHAOS-7/ onto their
+Only versions `v7.8` through `v7.11` and `v8.3` are provided with this package.
+Users can download other versions from https://www.spacecenter.dk/files/magnetic-models/CHAOS-7/
+or https://www.spacecenter.dk/files/magnetic-models/CHAOS-8/ onto their
 local machine and specify the file path to this function instead.
 
 # Example
 ```julia
-load_CHAOS_matfile(v"7.11")
+load_CHAOS_matfile(v"8.3")
 ```
 """
 function load_CHAOS_matfile(version::VersionNumber)
@@ -121,8 +123,10 @@ function load_CHAOS_matfile(version::VersionNumber)
         load_CHAOS_matfile(joinpath(project_path("data"), "CHAOS-7.10.mat"))
     elseif version == v"7.11"
         load_CHAOS_matfile(joinpath(project_path("data"), "CHAOS-7.11.mat"))
+    elseif version == v"8.3"
+        load_CHAOS_matfile(joinpath(project_path("data"), "CHAOS-8.3.mat"))
     else
-        @warn "CHAOS $version not found. Model coefficients can be found here: https://www.spacecenter.dk/files/magnetic-models/CHAOS-7/"
+        @warn "CHAOS $version not found."
     end
 
     return nothing
@@ -245,10 +249,13 @@ end
 """
     igrf(geoaz, lat, lon, year; alt=60e3)
 
-Return a `BField` in Tesla from IGRF-13 for position (`lat`, `lon`)°  at fractional
+Return a `BField` in Tesla from IGRF for position (`lat`, `lon`)°  at fractional
 `year`. `geoaz`° is the geodetic azimuth of the path from transmitter to receiver.
 By default, the magnetic field at an altitude of 60,000 meters is returned,
 but this can be overridden with the `alt` keyword argument.
+
+The IGRF version is that used by
+[SatelliteToolboxGeomagneticField.jl](https://github.com/JuliaSpace/SatelliteToolboxGeomagneticField.jl).
 """
 function igrf(geoaz, lat, lon, year; alt=60e3)
     # +N/-S; +E/-W; +D/-U
@@ -288,7 +295,7 @@ end
 """
     chaos(geoaz, lat::Real, lon:Real, year; alt=60e3)
 
-Return a `BField` from CHAOS-7 using internal and external sources for position
+Return a `BField` from CHAOS using internal and external sources for position
 (`lat`, `lon`)°  at fractional `year`.
 
 `geoaz`° is the geodetic azimuth of the path from transmitter to receiver.
