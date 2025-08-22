@@ -38,11 +38,11 @@ function __init__()
         pyimport("chaosmagpy")
     catch
         # Install chaosmagpy
-        Conda.add(["numpy", "scipy", "pandas", "cython", "matplotlib"],
+        Conda.add(["python", "numpy", "scipy", "pandas", "cython", "pyshp", "h5py"],
             Conda.ROOTENV)
 
         Conda.pip_interop(true, Conda.ROOTENV)
-        Conda.pip("install", ["cdflib", "hdf5storage"])
+        Conda.pip("install", "hdf5storage")
         Conda.pip("install", "chaosmagpy")
 
         pyimport("chaosmagpy")
@@ -322,7 +322,7 @@ function chaos(geoaz, lat::Number, lon::Number, year; alt=60e3)
     theta = 90 - lat  # geocentric co-lat (deg)
     phi = lon  # geocentric lon (deg)
 
-    Br, Bt, Bp = CHAOS_MODEL(t, r, theta, phi)
+    Br, Bt, Bp = CHAOS_MODEL.synth_values_tdep(t, r, theta, phi)  # time, radius, theta, phi
     u, s, e = only(Br), only(Bt), only(Bp)
 
     # Rotate the "use" frame to the propagation path xyz frame
@@ -376,7 +376,7 @@ function chaos(geoaz, lats, lons, year; alt=60e3)
     theta = 90 .- lats  # geocentric co-lat (deg)
     phi = lons  # geocentric lon (deg)
 
-    u, s, e = CHAOS_MODEL(t, r, theta, phi)
+    u, s, e = CHAOS_MODEL.synth_values_tdep(t, r, theta, phi)
 
     # Rotate the "use" frame to the propagation path xyz frame
     # negate az to correct rotation direction for downward pointing v
