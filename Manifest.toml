@@ -2,7 +2,7 @@
 
 julia_version = "1.11.6"
 manifest_format = "2.0"
-project_hash = "db53db6cd93f3299cf2d5c0c7394069214f2fad0"
+project_hash = "07888441d995d374d4da462ce8779d8cb59265d2"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "60665b326b75db6517939d0e1875850bc4a54368"
@@ -546,8 +546,8 @@ version = "0.5.5"
 
 [[deps.GeographicLib]]
 deps = ["StaticArrays"]
-git-tree-sha1 = "8743746a07a9db4357f1e45b68274f8e403ccbb7"
-repo-rev = "master"
+git-tree-sha1 = "ac1f4d886a3e6e6955ff1ef596e1938c107d154c"
+repo-rev = "v0.4.1"
 repo-url = "https://github.com/anowacki/GeographicLib.jl"
 uuid = "c96ba436-a6fe-11e9-10ab-c9f3919c93d1"
 version = "0.4.1"
