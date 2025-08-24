@@ -5,10 +5,10 @@ Convenience and utility functions for LongwaveModePropagator.jl.
 """
 module LMPTools
 
-using LinearAlgebra
-using PyCall, Conda
+using LinearAlgebra, Dates
+using CondaPkg, PythonCall
 using Rotations, StaticArrays
-using HDF5, Dates
+using HDF5
 using GeographicLib, SatelliteToolboxGeomagneticField
 using LongwaveModePropagator
 
@@ -24,8 +24,8 @@ const TRANSMITTER = Dict(
     :NPM => Transmitter("NPM", 21.420, -158.151, 21.4e3)
 )
 
-const CHAOS = PyNULL()
-const CHAOS_MODEL = PyNULL()
+const CHAOS = PythonCall.pynew()
+const CHAOS_MODEL = PythonCall.pynew()
 
 export TRANSMITTER
 export range
@@ -34,26 +34,14 @@ export igrf, chaos, load_CHAOS_matfile
 export zenithangle, isday, ferguson, flatlinearterminator, smoothterminator, fourierperturbation
 
 function __init__()
-    cp = try
-        pyimport("chaosmagpy")
-    catch
-        # Install chaosmagpy
-        Conda.add(["python", "numpy", "scipy", "pandas", "cython", "pyshp", "h5py"],
-            Conda.ROOTENV)
-
-        Conda.pip_interop(true, Conda.ROOTENV)
-        Conda.pip("install", "hdf5storage")
-        Conda.pip("install", "chaosmagpy")
-
-        pyimport("chaosmagpy")
-    end
+    PythonCall.pycopy!(CHAOS, pyimport("chaosmagpy"))
 
     chaosfile = newestchaos()
     @info "Loading $chaosfile"
 
-    model = cp.load_CHAOS_matfile(joinpath(project_path("data"), chaosfile))
-    copy!(CHAOS, cp)
-    copy!(CHAOS_MODEL, model)
+    model = CHAOS.load_CHAOS_matfile(joinpath(project_path("data"), chaosfile))
+    PythonCall.pycopy!(CHAOS_MODEL, model)
+    return nothing
 end
 
 function newestchaos()
@@ -90,12 +78,9 @@ The model coefficients are loaded by the Python package
 Copyright (c) 2022 Clemens Kloss.
 """
 function load_CHAOS_matfile(file)
-    cp = pyimport("chaosmagpy")
     @info "Loading $file"
-    model = cp.load_CHAOS_matfile(file)
-    copy!(CHAOS, cp)
-    copy!(CHAOS_MODEL, model)
-
+    model = CHAOS.load_CHAOS_matfile(file)
+    PythonCall.pycopy!(CHAOS_MODEL, model)
     return nothing
 end
 
@@ -317,12 +302,13 @@ See also: [`load_CHAOS_matfile`](@ref)
 function chaos(geoaz, lat::Number, lon::Number, year; alt=60e3)
     Re = 6371.2
     r = Re + alt/1000
-    t = CHAOS.data_utils.dyear_to_mjd(year)  # MJD2000
+    t = pyconvert(Float64, CHAOS.data_utils.dyear_to_mjd(year))  # MJD2000
 
     theta = 90 - lat  # geocentric co-lat (deg)
     phi = lon  # geocentric lon (deg)
 
-    Br, Bt, Bp = CHAOS_MODEL.synth_values_tdep(t, r, theta, phi)  # time, radius, theta, phi
+    sv = CHAOS_MODEL.synth_values_tdep(t, r, theta, phi)  # time, radius, theta, phi
+    Br, Bt, Bp = pyconvert(Tuple, sv)
     u, s, e = only(Br), only(Bt), only(Bp)
 
     # Rotate the "use" frame to the propagation path xyz frame
@@ -367,16 +353,19 @@ Return a `Vector{BField}` at each latitude-longitude pair formed from each eleme
 and `lons` in fractional `year`.
 """
 function chaos(geoaz, lats, lons, year; alt=60e3)
-    length(lats) == length(lons) || throw(ArgumentError("length(lats) must equal length(lons)"))
+    length(lats) == length(lons) || throw(ArgumentError("`length(lats)` must equal `length(lons)`"))
 
     Re = 6371.2
     r = Re + alt/1000
-    t = CHAOS.data_utils.dyear_to_mjd(year)  # MJD2000
+    t = pyconvert(Float64, CHAOS.data_utils.dyear_to_mjd(year))  # MJD2000
 
     theta = 90 .- lats  # geocentric co-lat (deg)
     phi = lons  # geocentric lon (deg)
 
-    u, s, e = CHAOS_MODEL.synth_values_tdep(t, r, theta, phi)
+    Br, Bt, Bp = CHAOS_MODEL.synth_values_tdep(t, r, theta, phi)
+    u = pyconvert(Vector{Float64}, Br)
+    s = pyconvert(Vector{Float64}, Bt)
+    e = pyconvert(Vector{Float64}, Bp)
 
     # Rotate the "use" frame to the propagation path xyz frame
     # negate az to correct rotation direction for downward pointing v
