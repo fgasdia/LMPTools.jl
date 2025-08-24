@@ -5,6 +5,7 @@ pandas = ""
 h5py = ""
 numpy = ""
 scipy = ""
+python = ">=3.10.2,<4"
 
 [pip.deps]
 chaosmagpy = ""
