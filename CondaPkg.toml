@@ -1,0 +1,11 @@
+[deps]
+pyshp = ""
+cython = ""
+pandas = ""
+h5py = ""
+numpy = ""
+scipy = ""
+
+[pip.deps]
+chaosmagpy = ""
+hdf5storage = ""
