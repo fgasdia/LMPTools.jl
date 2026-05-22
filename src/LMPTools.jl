@@ -442,7 +442,7 @@ function zenithangle(lat, lon, yr::Int, mo::Int, dy::Int, hr::Real, Δτ=nothing
     s1, c1 = sincos(ωa*te)
     s2, c2 = 2*s1*c1, (c1 + s1)*(c1 - s1)
     s3, c3 = s2*c1 + c2*s1, c2*c1 - s2*s1
-    s, c = SVector(s1, s2, s2), SVector(c1, c2, c3)
+    s, c = SVector(s1, s2, s3), SVector(c1, c2, c3)
 
     β = 2.92e-5
     dβ = -8.23e-5
