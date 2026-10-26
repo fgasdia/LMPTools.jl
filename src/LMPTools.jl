@@ -6,10 +6,11 @@ Convenience and utility functions for LongwaveModePropagator.jl.
 module LMPTools
 
 using LinearAlgebra, Dates
-using CondaPkg, PythonCall
+using PythonCall
 using Rotations, StaticArrays
 using HDF5
-using GeographicLib, SatelliteToolboxGeomagneticField
+using GeographicLib
+using SatelliteToolboxGeomagneticField
 using LongwaveModePropagator
 
 project_path(parts...) = normpath(@__DIR__, "..", parts...)

@@ -4,7 +4,6 @@ version = "0.2.5"
 authors = ["fgasdia <17058025+fgasdia@users.noreply.github.com>"]
 
 [deps]
-CondaPkg = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 GeographicLib = "c96ba436-a6fe-11e9-10ab-c9f3919c93d1"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
@@ -19,7 +18,6 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 GeographicLib = {rev = "v0.4.1", url = "https://github.com/anowacki/GeographicLib.jl"}
 
 [compat]
-CondaPkg = "0.2"
 Dates = "1"
 GeographicLib = "0.4.1"
 HDF5 = "0.17"
