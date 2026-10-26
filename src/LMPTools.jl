@@ -24,8 +24,8 @@ const TRANSMITTER = Dict(
     :NPM => Transmitter("NPM", 21.420, -158.151, 21.4e3)
 )
 
-const CHAOS = PythonCall.pynew()
-const CHAOS_MODEL = PythonCall.pynew()
+const CHAOS = Ref{Py}()
+const CHAOS_MODEL = Ref{Py}()
 
 export TRANSMITTER
 export range
@@ -34,13 +34,12 @@ export igrf, chaos, load_CHAOS_matfile
 export zenithangle, isday, ferguson, flatlinearterminator, smoothterminator, fourierperturbation
 
 function __init__()
-    PythonCall.pycopy!(CHAOS, pyimport("chaosmagpy"))
+    CHAOS[] = pyimport("chaosmagpy")
 
     chaosfile = newestchaos()
     @info "Loading $chaosfile"
 
-    model = CHAOS.load_CHAOS_matfile(joinpath(project_path("data"), chaosfile))
-    PythonCall.pycopy!(CHAOS_MODEL, model)
+    CHAOS_MODEL[] = CHAOS[].load_CHAOS_matfile(joinpath(project_path("data"), chaosfile))
     return nothing
 end
 
@@ -79,8 +78,7 @@ Copyright (c) 2022 Clemens Kloss.
 """
 function load_CHAOS_matfile(file)
     @info "Loading $file"
-    model = CHAOS.load_CHAOS_matfile(file)
-    PythonCall.pycopy!(CHAOS_MODEL, model)
+    CHAOS_MODEL[] = CHAOS[].load_CHAOS_matfile(file)
     return nothing
 end
 
@@ -307,7 +305,7 @@ function chaos(geoaz, lat::Number, lon::Number, year; alt=60e3)
     theta = 90 - lat  # geocentric co-lat (deg)
     phi = lon  # geocentric lon (deg)
 
-    sv = CHAOS_MODEL.synth_values_tdep(t, r, theta, phi)  # time, radius, theta, phi
+    sv = CHAOS_MODEL[].synth_values_tdep(t, r, theta, phi)  # time, radius, theta, phi
     Br, Bt, Bp = pyconvert(Tuple, sv)
     u, s, e = only(Br), only(Bt), only(Bp)
 
@@ -362,7 +360,7 @@ function chaos(geoaz, lats, lons, year; alt=60e3)
     theta = 90 .- lats  # geocentric co-lat (deg)
     phi = lons  # geocentric lon (deg)
 
-    Br, Bt, Bp = CHAOS_MODEL.synth_values_tdep(t, r, theta, phi)
+    Br, Bt, Bp = CHAOS_MODEL[].synth_values_tdep(t, r, theta, phi)
     u = pyconvert(Vector{Float64}, Br)
     s = pyconvert(Vector{Float64}, Bt)
     e = pyconvert(Vector{Float64}, Bp)
@@ -431,7 +429,7 @@ function zenithangle(lat, lon, yr::Int, mo::Int, dy::Int, hr::Real, Δτ=nothing
     s1, c1 = sincos(ωa*te)
     s2, c2 = 2*s1*c1, (c1 + s1)*(c1 - s1)
     s3, c3 = s2*c1 + c2*s1, c2*c1 - s2*s1
-    s, c = SVector(s1, s2, s2), SVector(c1, c2, c3)
+    s, c = SVector(s1, s2, s3), SVector(c1, c2, c3)
 
     β = 2.92e-5
     dβ = -8.23e-5
