@@ -6,3 +6,6 @@ GeographicLib = "c96ba436-a6fe-11e9-10ab-c9f3919c93d1"
 LongwaveModePropagator = "38c6559a-e0a7-48c6-827d-3f02e2d19cec"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+
+[sources]
+GeographicLib = {rev = "master", url = "https://github.com/anowacki/GeographicLib.jl"}
